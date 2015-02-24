@@ -33,7 +33,8 @@ from oslo.config import cfg
 from neutronclient.neutron import client
 
 LOG = logging.getLogger(__name__)
-URI = cfg.CONF.get('neutron_url')
+CONF = cfg.CONF
+URI = CONF.neutron.url
 
 
 def list_networks(context):

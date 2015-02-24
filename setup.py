@@ -26,9 +26,9 @@ from setuptools import setup
 
 
 setup(
-    name='openstackocci-icehouse',
+    name='openstackocci-juno',
     version='1.0',
-    description='OCCI interface for Openstack (stable/icehouse).',
+    description='OCCI interface for Openstack (stable/juno).',
     long_description='''
          This is a clone of https://github.com/dizz/nova - it provides a
          python egg which can be deployed in OpenStack and will thereby add the
