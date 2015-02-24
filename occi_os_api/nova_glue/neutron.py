@@ -151,7 +151,7 @@ def create_router(context, source_id, target_id):
         neutron = client.Client('2.0', endpoint_url=URI, token=tokn)
 
         router = neutron.create_router({'router': {'name': 'occirouter'}})
-        subnet = neutron.list_subnets(network_id = source_id)['subnets'][0]
+        subnet = neutron.list_subnets(network_id=source_id)['subnets'][0]
 
         neutron.add_interface_router(router['router']['id'],
                                      {'subnet_id': subnet['id']})
@@ -172,8 +172,8 @@ def delete_router(context, router_id, network_id):
     try:
         neutron = client.Client('2.0', endpoint_url=URI, token=tokn)
         neutron.remove_gateway_router(router_id)
-        subnet = neutron.list_subnets(network_id = network_id)['subnets'][0]
-        neutron.remove_interface_router(router_id, { 'subnet_id' : subnet['id'] })
+        subnet = neutron.list_subnets(network_id=network_id)['subnets'][0]
+        neutron.remove_interface_router(router_id, {'subnet_id': subnet['id']})
         neutron.delete_router(router_id)
     except Exception as err:
         raise AttributeError(err)

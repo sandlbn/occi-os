@@ -101,7 +101,7 @@ def get_os_token(username, password, tenant="demo"):
     conn.request("POST", "/v3/auth/tokens", body, heads)
     response = conn.getresponse()
     header = response.getheader('X-Subject-Token')
-    return header.read()
+    return header
 
 
 def get_qi_listing(token):

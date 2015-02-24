@@ -20,9 +20,9 @@
 Network resource backend.
 """
 
-#W0613:unused arguments,R0201:mth could be func,R0903:too few pub mthd.
-#W0232:no init
-#pylint: disable=W0613,R0201,R0903,W0232
+# W0613:unused arguments,R0201:mth could be func,R0903:too few pub mthd.
+# W0232:no init
+# pylint: disable=W0613,R0201,R0903,W0232
 
 
 from occi import backend
@@ -201,7 +201,7 @@ class NetworkInterfaceBackend(backend.KindBackend):
         Remove a floating ip!
         """
         if link.source.kind == infrastructure.COMPUTE and \
-                        link.target.kind == infrastructure.NETWORK:
+                link.target.kind == infrastructure.NETWORK:
             # remove floating ip.
             neutron.remove_floating_ip(extras['nova_ctx'],
                                        link.attributes['occi.core.id'])
