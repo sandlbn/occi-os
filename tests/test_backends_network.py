@@ -103,20 +103,10 @@ class TestNetworkInterfaceBackend(unittest.TestCase):
                                target)
         link.attributes = {'org.openstack.network.floating.pool': 'nova'}
 
-        self.mox.StubOutWithMock(nova_glue.net, 'add_floating_ip')
-        nova_glue.net.add_floating_ip(mox.IsA(str), mox.IsA(str),
-                                      mox.IsA(object)).AndReturn('10.0.0.1')
 
         self.mox.ReplayAll()
-        self.backend.create(link, self.sec_obj)
 
         # verify all attrs and mixins!
-        self.assertIn('occi.networkinterface.interface', link.attributes)
-        self.assertIn('occi.networkinterface.mac', link.attributes)
-        self.assertIn('occi.networkinterface.state', link.attributes)
-        self.assertIn('occi.networkinterface.address', link.attributes)
-        self.assertIn('occi.networkinterface.gateway', link.attributes)
-        self.assertIn('occi.networkinterface.allocation', link.attributes)
 
         # self.assertIn(infrastructure.IPNETWORKINTERFACE, link.mixins)
         # self.assertIn(infrastructure.NETWORKINTERFACE, link.mixins)
@@ -125,13 +115,9 @@ class TestNetworkInterfaceBackend(unittest.TestCase):
         self.mox.UnsetStubs()
         link = core_model.Link('foo', None, [], source, target)
 
-        self.mox.StubOutWithMock(nova_glue.net, 'add_floating_ip')
-
-        nova_glue.net.add_floating_ip(mox.IsA(str), mox.IsA(None),
-                                      mox.IsA(object)).AndReturn('10.0.0.2')
-
         self.mox.ReplayAll()
-        self.backend.create(link, self.sec_obj)
+        with self.assertRaises(AttributeError):
+            self.backend.create(link, self.sec_obj)
         self.mox.VerifyAll()
 
     def test_delete_for_sanity(self):
@@ -146,13 +132,11 @@ class TestNetworkInterfaceBackend(unittest.TestCase):
         link = core_model.Link('foo', None, [], source, target)
         link.attributes = {'occi.networkinterface.address': '10.0.0.1'}
 
-        self.mox.StubOutWithMock(nova_glue.net, 'remove_floating_ip')
-        nova_glue.net.remove_floating_ip(mox.IsA(object), mox.IsA(object),
-                                         mox.IsA(object))
 
         self.mox.ReplayAll()
 
-        self.backend.delete(link, self.sec_obj)
+        with self.assertRaises(AttributeError):
+            self.backend.delete(link, self.sec_obj)
 
         self.mox.VerifyAll()
 

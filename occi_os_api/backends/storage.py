@@ -80,7 +80,7 @@ class StorageBackend(backend.KindBackend, backend.ActionBackend):
 
         volume = storage.get_storage(v_id, extras['nova_ctx'])
 
-        entity.attributes['occi.core.title'] = str(volume['display_name'])
+        entity.attributes['occi.core.title'] = str(volume['name'])
         entity.attributes['occi.storage.size'] = str(float(volume['size']))
 
         # OS volume states:

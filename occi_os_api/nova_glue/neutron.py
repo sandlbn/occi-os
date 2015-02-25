@@ -27,14 +27,10 @@ NotImplementedErrors when creating networks:
 """
 
 import logging
-
-from oslo.config import cfg
-
 from neutronclient.neutron import client
+from occi_os_api.utils import get_neutron_url
 
 LOG = logging.getLogger(__name__)
-CONF = cfg.CONF
-URI = CONF.neutron.url
 
 
 def list_networks(context):
@@ -44,7 +40,7 @@ def list_networks(context):
     tokn = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=URI, token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
         tmp = neutron.list_networks()
         return tmp['networks']
     except Exception as err:
@@ -58,7 +54,7 @@ def create_network(context):
     tokn = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=URI, token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
         network = {'admin_state_up': True}
         tmp = neutron.create_network({'network': network})
         return tmp['network']['id']
@@ -73,7 +69,7 @@ def retrieve_network(context, iden):
     tokn = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=URI, token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
         tmp = neutron.show_network(iden)
         return tmp['network']
     except Exception as err:
@@ -87,7 +83,7 @@ def delete_network(context, iden):
     tokn = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=URI, token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
         tmp = neutron.delete_network(iden)
     except Exception as err:
         raise AttributeError(err)
@@ -101,7 +97,7 @@ def create_subnet(context, iden, cidr, gw, dynamic=True):
     tent = context.tenant
 
     try:
-        neutron = client.Client('2.0', endpoint_url=URI, token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
 
         subnet = {'network_id': iden,
                   'ip_version': 4,
@@ -121,7 +117,7 @@ def retrieve_subnet(context, iden):
     tokn = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=URI, token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
         return neutron.show_subnet(iden)
     except Exception as err:
         raise AttributeError(err)
@@ -134,7 +130,7 @@ def delete_subnet(context, iden):
     tokn = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=URI, token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
         return neutron.delete_subnet(iden)
     except Exception as err:
         raise AttributeError(err)
@@ -148,7 +144,7 @@ def create_router(context, source_id, target_id):
 
     try:
         # TODO: check if we can do this for all!
-        neutron = client.Client('2.0', endpoint_url=URI, token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
 
         router = neutron.create_router({'router': {'name': 'occirouter'}})
         subnet = neutron.list_subnets(network_id=source_id)['subnets'][0]
@@ -170,7 +166,7 @@ def delete_router(context, router_id, network_id):
     tokn = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=URI, token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
         neutron.remove_gateway_router(router_id)
         subnet = neutron.list_subnets(network_id=network_id)['subnets'][0]
         neutron.remove_interface_router(router_id, {'subnet_id': subnet['id']})
@@ -186,7 +182,7 @@ def add_floating_ip(context, iden, network_id):
     tokn = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=URI, token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
         tmp = neutron.list_ports(device_id=iden)['ports']
 
         if len(tmp) == 0:
@@ -207,7 +203,7 @@ def remove_floating_ip(context, iden):
     tokn = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=URI, token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
         neutron.delete_floatingip(iden)
     except Exception as err:
         raise AttributeError(err)
