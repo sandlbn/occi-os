@@ -25,10 +25,9 @@ import logging
 from nova import compute
 
 from occi_os_api.nova_glue import vm
+from occi_os_api.utils import get_openstack_api
 
 # Connect to nova :-)
-
-NETWORK_API = compute.API().network_api
 
 
 LOG = logging.getLogger(__name__)
@@ -44,7 +43,7 @@ def get_network_details(uid, context):
     vm_instance = vm.get_vm(uid, context)
     result = []
 
-    for item in NETWORK_API.get_instance_nw_info(context, vm_instance):
+    for item in get_openstack_api('neutron').get_instance_nw_info(context, vm_instance):
         result.append({'vif': item['id'], 'net_id': item['network']['id']})
 
     return result

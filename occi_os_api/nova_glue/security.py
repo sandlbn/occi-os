@@ -20,9 +20,8 @@
 Security related 'glue'
 """
 
-from nova import compute
+from occi_os_api.utils import get_openstack_api
 
-SEC_API = compute.API().security_group_api
 
 # TODO: exception handling
 
@@ -35,7 +34,7 @@ def create_group(name, description, context):
     description -- Description.
     context -- The os context.
     """
-    SEC_API.create_security_group(context, name, description)
+    get_openstack_api('security').create_security_group(context, name, description)
 
 
 def remove_group(group, context):
@@ -45,7 +44,7 @@ def remove_group(group, context):
     group -- the security group.
     context -- The os context.
     """
-    SEC_API.destroy(context, group)
+    get_openstack_api('security').destroy(context, group)
 
 
 def retrieve_group_by_name(name, context):
@@ -55,7 +54,7 @@ def retrieve_group_by_name(name, context):
     mixin_term -- The term of the mixin representing the group.
     context -- The os context.
     """
-    return SEC_API.list(context, names=[name], project=context.project_id)[0]
+    return get_openstack_api('security').list(context, names=[name], project=context.project_id)[0]
 
 
 def retrieve_groups_by_project(context):
@@ -64,7 +63,7 @@ def retrieve_groups_by_project(context):
 
     context -- The os context.
     """
-    return SEC_API.list(context, project=context.project_id)
+    return get_openstack_api('security').list(context, project=context.project_id)
 
 
 def create_rule(name, iden, rule, context):
@@ -76,7 +75,7 @@ def create_rule(name, iden, rule, context):
     """
     # TODO: needs work!
     try:
-        return SEC_API.add_rules(context, iden, name, rule)[0]
+        return get_openstack_api('security').add_rules(context, iden, name, rule)[0]
     except Exception as e:
         raise AttributeError(e.message)
 
@@ -89,8 +88,8 @@ def remove_rule(rule, context):
     context -- The os context.
     """
     group_id = rule['parent_group_id']
-    security_group = SEC_API.get(context, None, group_id)
-    SEC_API.remove_rules(context, security_group, (rule['id'], ))
+    security_group = get_openstack_api('security').get(context, None, group_id)
+    get_openstack_api('security').remove_rules(context, security_group, (rule['id'], ))
 
 
 def retrieve_rule(uid, context):
@@ -100,4 +99,4 @@ def retrieve_rule(uid, context):
     uid -- Id of the rule (entity.attributes['occi.core.id'])
     context -- The os context.
     """
-    return SEC_API.get_rule(context, uid)
+    return get_openstack_api('security').get_rule(context, uid)

@@ -27,7 +27,6 @@ from nova import utils
 from nova.compute import task_states
 from nova.compute import vm_states
 from nova.compute import flavors
-from nova.image import glance
 from nova.openstack.common import log
 
 from occi import exceptions
@@ -35,9 +34,8 @@ from occi.extensions import infrastructure
 
 from occi_os_api.extensions import os_mixins
 from occi_os_api.extensions import os_addon
+from occi_os_api.utils import get_openstack_api
 
-COMPUTE_API = compute.API()
-IMAGE_SERVICE = glance.get_default_image_service()
 
 LOG = log.getLogger(__name__)
 
@@ -90,7 +88,7 @@ def create_vm(entity, context):
         # Look for security group. If the group is non-existant, the
         # call to create will fail.
         elif os_addon.SEC_GROUP in mixin.related:
-            secgroup = COMPUTE_API.security_group_api.get(context,
+            secgroup = get_openstack_api('compute').security_group_api.get(context,
                                                           name=mixin.term)
             sg_names.append(secgroup["name"])
 
@@ -110,7 +108,7 @@ def create_vm(entity, context):
         inst_type = None
     # make the call
     try:
-        (instances, _reservation_id) = COMPUTE_API.create(
+        (instances, _reservation_id) = get_openstack_api('compute').create(
             context=context,
             instance_type=inst_type,
             image_href=os_template.os_id,
@@ -155,7 +153,7 @@ def rebuild_vm(uid, image_href, context):
     admin_password = utils.generate_password()
     kwargs = {}
     try:
-        COMPUTE_API.rebuild(context, instance, image_href, admin_password,
+        get_openstack_api('compute').rebuild(context, instance, image_href, admin_password,
                             **kwargs)
     except Exception as e:
         raise AttributeError(e.message)
@@ -176,7 +174,7 @@ def resize_vm(uid, flavor_id, context):
     kwargs = {}
     try:
         flavor = flavors.get_flavor_by_flavor_id(flavor_id)
-        COMPUTE_API.resize(context, instance, flavor_id=flavor['flavorid'],
+        get_openstack_api('compute').resize(context, instance, flavor_id=flavor['flavorid'],
                            **kwargs)
         ready = False
         i = 0
@@ -189,7 +187,7 @@ def resize_vm(uid, flavor_id, context):
             import time
             time.sleep(1)
         instance = get_vm(uid, context)
-        COMPUTE_API.confirm_resize(context, instance)
+        get_openstack_api('compute').confirm_resize(context, instance)
     except Exception as e:
         raise AttributeError(str(e))
 
@@ -203,7 +201,7 @@ def delete_vm(uid, context):
     """
     try:
         instance = get_vm(uid, context)
-        COMPUTE_API.delete(context, instance)
+        get_openstack_api('compute').delete(context, instance)
     except Exception as error:
         raise exceptions.HTTPError(500, str(error))
 
@@ -218,7 +216,7 @@ def suspend_vm(uid, context):
     instance = get_vm(uid, context)
 
     try:
-        COMPUTE_API.pause(context, instance)
+        get_openstack_api('compute').pause(context, instance)
     except Exception as error:
         raise exceptions.HTTPError(500, str(error))
 
@@ -233,7 +231,7 @@ def snapshot_vm(uid, image_name, context):
     """
     instance = get_vm(uid, context)
     try:
-        COMPUTE_API.snapshot(context,
+        get_openstack_api('compute').snapshot(context,
                              instance,
                              image_name)
 
@@ -253,7 +251,7 @@ def start_vm(uid, context):
     """
     instance = get_vm(uid, context)
     try:
-        COMPUTE_API.resume(context, instance)
+        get_openstack_api('compute').resume(context, instance)
     except Exception as e:
         raise AttributeError(e.message)
 
@@ -270,7 +268,7 @@ def stop_vm(uid, context):
     instance = get_vm(uid, context)
 
     try:
-        COMPUTE_API.suspend(context, instance)
+        get_openstack_api('compute').suspend(context, instance)
     except Exception as e:
         raise AttributeError(e.message)
 
@@ -297,7 +295,7 @@ def restart_vm(uid, method, context):
     else:
         raise AttributeError('Unknown method.')
     try:
-        COMPUTE_API.reboot(context, instance, reboot_type)
+        get_openstack_api('compute').reboot(context, instance, reboot_type)
     except Exception as e:
         raise AttributeError(e.message)
 
@@ -313,7 +311,7 @@ def attach_volume(instance_id, volume_id, mount_point, context):
     """
     instance = get_vm(instance_id, context)
     try:
-        COMPUTE_API.attach_volume(
+        get_openstack_api('compute').attach_volume(
             context,
             instance,
             volume_id,
@@ -332,7 +330,7 @@ def detach_volume(instance_id, volume, context):
     """
     try:
         instance = get_vm(instance_id, context)
-        COMPUTE_API.detach_volume(context, instance, volume)
+        get_openstack_api('compute').detach_volume(context, instance, volume)
     except Exception as e:
         raise AttributeError(e)
 
@@ -347,7 +345,7 @@ def set_password_for_vm(uid, password, context):
     """
     instance = get_vm(uid, context)
     try:
-        COMPUTE_API.set_admin_password(context, instance, password)
+        get_openstack_api('compute').set_admin_password(context, instance, password)
     except Exception as e:
         raise AttributeError(e.message)
 
@@ -362,7 +360,7 @@ def get_vnc(uid, context):
     console = None
     instance = get_vm(uid, context)
     try:
-        console = COMPUTE_API.get_vnc_console(context, instance, 'novnc')
+        console = get_openstack_api('compute').get_vnc_console(context, instance, 'novnc')
     except Exception:
         LOG.warn('Console info is not available atm!')
     finally:
@@ -377,7 +375,7 @@ def get_vm(uid, context):
     context -- the os context
     """
     try:
-        instance = COMPUTE_API.get(context, uid, want_objects=True)
+        instance = get_openstack_api('compute').get(context, uid, want_objects=True)
     except Exception:
         raise exceptions.HTTPError(404, 'VM not found!')
     return instance
@@ -388,7 +386,7 @@ def get_vms(context):
     Retrieve all VMs in a given context.
     """
     opts = {'deleted': False}
-    tmp = COMPUTE_API.get_all(context, search_opts=opts)
+    tmp = get_openstack_api('compute').get_all(context, search_opts=opts)
     return tmp
 
 
@@ -440,7 +438,7 @@ def retrieve_image(uid, context):
     Return details on an image.
     """
     try:
-        return IMAGE_SERVICE.show(context, uid)
+        return get_openstack_api('image').show(context, uid)
     except Exception as e:
         raise AttributeError(e.message)
 
@@ -449,7 +447,7 @@ def retrieve_images(context):
     """
     Retrieve list of images.
     """
-    return IMAGE_SERVICE.detail(context)
+    return get_openstack_api('image').detail(context)
 
 
 def retrieve_flavors():
