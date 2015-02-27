@@ -184,14 +184,15 @@ class OCCIApplication(occi_wsgi.Application, wsgi.Application):
                 LOG.debug(msg)
                 continue
             ctg_term = occify_terms(img['id'])
-            os_template = os_mixins.OsTemplate(term=ctg_term,
-                                               scheme=template_schema,
-                                               os_id=img['id'],
-                                               related=[infrastructure.
-                                                        OS_TEMPLATE],
-                                               attributes=None,
-                                               title='Image: %s' % img['name'],
-                                               location='/' + ctg_term + '/')
+            os_template = os_mixins.OsTemplate(
+                term=ctg_term,
+                scheme=template_schema,
+                os_id=img['id'],
+                related=[infrastructure.OS_TEMPLATE],
+                attributes=None,
+                title='Image: %s' % get_image_name(img),
+                location='/' + ctg_term + '/'
+            )
 
             try:
                 self.registry.get_backend(os_template, extras)
@@ -269,5 +270,15 @@ def occify_terms(term_name):
     '''
     Occifies a term_name so that it is compliant with GFD 185.
     '''
-    term = term_name.strip().replace(' ', '_').replace('.', '-').lower()
-    return term
+    if term_name:
+        return term_name.strip().replace(' ', '_').replace('.', '-').lower()
+
+def get_image_name(image):
+    """
+    Return image name if Image name is not None
+    if Image name is None return Image Id
+    """
+    if image['name']:
+        return image['name']
+    else:
+        return image['id']
