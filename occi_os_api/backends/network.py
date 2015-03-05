@@ -29,6 +29,7 @@ from occi import backend
 from occi.extensions import infrastructure
 
 from occi_os_api.nova_glue import neutron
+from occi_os_api.nova_glue import net
 
 
 class NetworkBackend(backend.KindBackend, backend.ActionBackend):
@@ -187,8 +188,13 @@ class NetworkInterfaceBackend(backend.KindBackend):
         """
         Update the attributes of the links.
         """
-        # TODO!
-        pass
+        uid = entity.attributes['occi.core.id']
+        context = extras['nova_ctx']
+        port_id = uid.split('/')[:-1]
+        interface = neutron.retrieve_port(context, port_id)
+        entity.attributes['occi.network.interface'] = interface['id']
+        entity.attributes['occi.network.state'] = interface['status'].lower()
+        entity.attributes['occi.network.mac'] = interface['mac_address']
 
     def update(self, old, new, extras):
         """

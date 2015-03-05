@@ -139,6 +139,9 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         nets = neutron.list_networks(context)
         net_ids = [item['id'] for item in nets]
 
+        ports = neutron.list_ports(context)
+        port_ids = [item['id'] for item in ports]
+
         if (key, context.user_id) in self.cache:
             # I have seen it - need to update or delete if gone in OS!
             # I have already seen it
@@ -189,6 +192,8 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 result = self._construct_occi_compute(iden, extras)[0]
             elif iden in stor_res_ids:
                 result = self._construct_occi_storage(iden, extras)[0]
+            elif iden in port_ids:
+                result = self._construct_occi_networkinterface(iden, extras)[0]
             else:
                 # doesn't exist!
                 raise KeyError
@@ -438,3 +443,37 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
 
         # TODO: deal with routers!
         return result
+
+    def _construct_occi_networkinterface(self, identifier, extras):
+        """
+        Create a network interface resource.
+        """
+        result = []
+        context = extras['nova_ctx']
+        item = neutron.retrieve_port(context, identifier)
+        iden = infrastructure.NETWORKINTERFACE.location + identifier
+        # get network resource
+        entity = self.get_resource(
+            infrastructure.COMPUTE.location + str(item['device_id']),
+            extras
+        )
+        # get compute resource
+        source = self.get_resource(
+            infrastructure.NETWORK.location + str(item['network_id']),
+            extras
+        )
+        # create link
+        link = core_model.Link(
+            infrastructure.NETWORKINTERFACE.location + item['id'],
+            infrastructure.NETWORKINTERFACE,
+            [],
+            source,
+            entity
+        )
+        link.attributes['occi.core.id'] = iden
+        link.extras = self.get_extras(extras)
+        source.links.append(link)
+        result.append(link)
+        self.cache[(link.identifier, context.user_id)] = link
+        return result
+

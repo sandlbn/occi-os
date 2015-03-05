@@ -27,6 +27,7 @@ from oslo.config import cfg
 
 from nova import wsgi
 from nova.openstack.common import log
+from occi_os_api.utils import occify_terms
 
 from occi_os_api import registry
 from occi_os_api.backends import compute
@@ -105,8 +106,6 @@ class OCCIApplication(occi_wsgi.Application, wsgi.Application):
         # will use one backend for the networking links!
         self.register_backend(infrastructure.NETWORKINTERFACE,
                               networkinterface_backend)
-        #self.register_backend(infrastructure.IPNETWORKINTERFACE,
-        #                      networkinterface_backend)
 
         self.register_backend(infrastructure.STORAGE, storage_backend)
         self.register_backend(infrastructure.ONLINE, storage_backend)
@@ -263,11 +262,3 @@ class OCCIApplication(occi_wsgi.Application, wsgi.Application):
                     self.registry.get_backend(sec_mix, extras)
                 except AttributeError:
                     self.register_backend(sec_mix, MIXIN_BACKEND)
-
-
-def occify_terms(term_name):
-    '''
-    Occifies a term_name so that it is compliant with GFD 185.
-    '''
-    term = term_name.strip().replace(' ', '_').replace('.', '-').lower()
-    return term

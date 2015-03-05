@@ -84,7 +84,7 @@ def delete_network(context, iden):
 
     try:
         neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
-        tmp = neutron.delete_network(iden)
+        neutron.delete_network(iden)
     except Exception as err:
         raise AttributeError(err)
 
@@ -207,3 +207,30 @@ def remove_floating_ip(context, iden):
         neutron.delete_floatingip(iden)
     except Exception as err:
         raise AttributeError(err)
+
+def retrieve_port(context, iden):
+    """
+    Retrieve port information.
+    """
+    tokn = context.auth_token
+
+    try:
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
+        port = neutron.show_port(context, iden)
+        return port['port']
+    except Exception as err:
+        raise AttributeError(err)
+
+def list_ports(context, iden):
+    """
+    List ports
+    """
+    tokn = context.auth_token
+
+    try:
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
+        ports = neutron.list_ports(context, iden)
+        return ports['ports']
+    except Exception as err:
+        raise AttributeError(err)
+

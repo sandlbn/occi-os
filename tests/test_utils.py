@@ -25,7 +25,8 @@ Test utils module.
 import unittest
 import mock
 import nova
-from occi_os_api.utils import get_openstack_api, get_neutron_url
+from occi_os_api.utils import get_openstack_api, get_neutron_url, \
+    occify_terms
 from oslo.config import cfg
 
 
@@ -99,3 +100,20 @@ class TestUtils(unittest.TestCase):
 
         neutron_url = get_neutron_url()
         self.assertEqual(neutron_url, "localhost:999")
+
+    def test_p_occify_terms(self):
+        """
+        Test occify term for GFD 185 compilance
+        """
+
+        string1 = " _AeRRV-_ "
+        occi_term = occify_terms(string1)
+        self.assertEqual(occi_term, "_aerrv-_")
+
+        string2 = " b7ffb49e2369913df0c6b7aeb72cbc0b1e42c947 "
+        occi_term = occify_terms(string2)
+        self.assertEqual(occi_term, "b7ffb49e2369913df0c6b7aeb72cbc0b1e42c947")
+
+        string3 = None
+        occi_term = occify_terms(string3)
+        self.assertEqual(occi_term, None)

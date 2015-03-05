@@ -45,3 +45,10 @@ def get_neutron_url():
     returns neutron url based on oslo config
     """
     return CONF.neutron.url
+
+def occify_terms(term_name):
+    """
+    Occifies a term_name so that it is compliant with GFD 185.
+    """
+    if term_name:
+        return term_name.strip().replace(' ', '_').replace('.', '-').lower()
