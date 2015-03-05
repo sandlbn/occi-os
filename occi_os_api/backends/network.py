@@ -29,7 +29,6 @@ from occi import backend
 from occi.extensions import infrastructure
 
 from occi_os_api.nova_glue import neutron
-from occi_os_api.nova_glue import net
 
 
 class NetworkBackend(backend.KindBackend, backend.ActionBackend):
@@ -116,13 +115,13 @@ class IpNetworkBackend(backend.MixinBackend):
         ctx = extras['nova_ctx']
         iden = entity.attributes['occi.core.id']
 
-        tmp = neutron.retrieve_network(ctx, iden)
-        subnet_id = tmp['subnets'][0]
-        tmp = neutron.retrieve_subnet(ctx, subnet_id)['subnet']
+        network = neutron.retrieve_network(ctx, iden)
+        subnet_id = network['subnets'][0]
+        subnet = neutron.retrieve_subnet(ctx, subnet_id)['subnet']
 
-        entity.attributes['occi.network.address'] = tmp['cidr']
-        entity.attributes['occi.network.gateway'] = tmp['gateway_ip']
-        if tmp['enable_dhcp'] is True:
+        entity.attributes['occi.network.address'] = subnet['cidr']
+        entity.attributes['occi.network.gateway'] = subnet['gateway_ip']
+        if subnet['enable_dhcp'] is True:
             entity.attributes['occi.network.allocation'] = 'dynamic'
         else:
             entity.attributes['occi.network.allocation'] = 'static'
