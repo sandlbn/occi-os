@@ -183,7 +183,7 @@ def add_floating_ip(context, iden, network_id):
 
     try:
         neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
-        tmp = neutron.list_ports(device_id=iden)['ports']
+        tmp = list_ports(device_id=iden)
 
         if len(tmp) == 0:
             return None
@@ -208,7 +208,7 @@ def remove_floating_ip(context, iden):
     except Exception as err:
         raise AttributeError(err)
 
-def retrieve_port(context, iden):
+def retrieve_port(context, iden, **kwargs):
     """
     Retrieve port information.
     """
@@ -216,12 +216,12 @@ def retrieve_port(context, iden):
 
     try:
         neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
-        port = neutron.show_port(context, iden)
+        port = neutron.show_port(iden, **kwargs)
         return port['port']
     except Exception as err:
         raise AttributeError(err)
 
-def list_ports(context, iden):
+def list_ports(context, **kwargs):
     """
     List ports
     """
@@ -229,7 +229,7 @@ def list_ports(context, iden):
 
     try:
         neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
-        ports = neutron.list_ports(context, iden)
+        ports = neutron.list_ports(**kwargs)
         return ports['ports']
     except Exception as err:
         raise AttributeError(err)

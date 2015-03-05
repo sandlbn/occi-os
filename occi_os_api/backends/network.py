@@ -189,7 +189,7 @@ class NetworkInterfaceBackend(backend.KindBackend):
         """
         uid = entity.attributes['occi.core.id']
         context = extras['nova_ctx']
-        port_id = uid.split('/')[:-1]
+        port_id = uid.split('/')[-1]
         interface = neutron.retrieve_port(context, port_id)
         entity.attributes['occi.network.interface'] = interface['id']
         entity.attributes['occi.network.state'] = interface['status'].lower()
