@@ -146,6 +146,9 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         secs = security.retrieve_groups_by_project(context)
         sec_ids = [item['id'] for item in secs]
 
+        secr = [rule.get('rules') for rule in secs if rule.get('rules')][0]
+        secr_ids = [rule.get('id') for rule in secr]
+
         if (key, context.user_id) in self.cache:
             # I have seen it - need to update or delete if gone in OS!
             # I have already seen it
@@ -172,6 +175,12 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 raise KeyError
             if iden not in sec_ids and cached_item.kind == \
                     os_addon.SEC_GROUP:
+                # it was delete in OS -> remove from cache + KeyError!
+                # can delete it because it was my item!
+                self.cache.pop((key, repr(extras)))
+                raise KeyError
+            if iden not in secr_ids and cached_item.kind == \
+                    os_addon.SEC_RULE:
                 # it was delete in OS -> remove from cache + KeyError!
                 # can delete it because it was my item!
                 self.cache.pop((key, repr(extras)))
@@ -208,6 +217,8 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 result = self._construct_occi_networkinterface(iden, extras)[0]
             elif iden in sec_ids:
                 result = self._construct_occi_security_group(iden, extras)[0]
+            elif iden in secr_ids:
+                result = self._construct_occi_security_rule(iden, extras)[0]
             else:
                 # doesn't exist!
                 raise KeyError
@@ -254,6 +265,10 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         secs = security.retrieve_groups_by_project(context)
         sec_ids = [item['id'] for item in secs]
 
+        secr = [rule.get('rules') for rule in secs if rule.get('rules')][0]
+        secr_ids = [rule.get('id') for rule in secr]
+
+
         for item in self.cache.values():
             if item.extras is not None and item.extras['user_id'] != \
                     context.user_id:
@@ -288,6 +303,12 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 # add compute and it's links to result
                 self._update_occi_osgroup(item, extras)
                 result.append(item)
+            elif item_id in secr_ids and item.kind == \
+                    os_addon.SEC_RULE:
+                # check & update (take links, mixins from cache)
+                # add compute and it's links to result
+                self._update_occi_osrule(item, extras)
+                result.append(item)
             elif item_id not in net_ids and item.kind == \
                     infrastructure.NETWORK:
                 # remove item and it's links from cache!
@@ -319,6 +340,14 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
             else:
                 # construct (with links and mixins and add to cache!
                 ent_list = self._construct_occi_security_group(item['id'], extras)
+                result.extend(ent_list)
+        for item in secr:
+            if (os_addon.SEC_RULE.location + item['id'],
+                    context.user_id) in self.cache:
+                continue
+            else:
+                # construct (with links and mixins and add to cache!
+                ent_list = self._construct_occi_security_rule(item['id'], extras)
                 result.extend(ent_list)
         for item in vms:
             if (infrastructure.COMPUTE.location + item['uuid'],
@@ -508,7 +537,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         self.cache[(link.identifier, context.user_id)] = link
         return result
 
-    def _construct_occi_security_group(self, identifier, extras):
+    def _construct_occi_security_rule(self, identifier, extras):
         """
         Contruct security group
         :param identifier: Id of
@@ -518,11 +547,11 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         result = []
         context = extras['nova_ctx']
 
-        group = security.retrieve_group(identifier, context)
+        group = security.retrieve_rule(identifier, context)
         mixins = []
 
-        iden = os_addon.SEC_GROUP.location + identifier
-        entity = core_model.Resource(iden, os_addon.SEC_GROUP, mixins)
+        iden = os_addon.SEC_RULE.location + identifier
+        entity = core_model.Resource(iden, os_addon.SEC_RULE, mixins)
         entity.attributes['occi.core.id'] = identifier
         entity.extras = self.get_extras(extras)
         self.cache[(entity.identifier, context.user_id)] = entity
@@ -533,3 +562,36 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
     def _update_occi_osgroup(self, entity, extras):
         return entity
 
+    def _construct_occi_security_group(self, identifier, extras):
+        """
+        Contruct security group
+        :param identifier: Id of
+        :param extras:
+        :return: cache object
+        """
+        result = []
+        context = extras['nova_ctx']
+
+        mixins = []
+
+        group = security.retrieve_group(identifier, context)
+        if len(group.get('rules') > 0):
+            for rule in group.get('rules'):
+                mixins.append(
+                    self. _construct_occi_security_rule(
+                        rule.get('id'),
+                        extras
+                    )
+                )
+
+        iden = os_addon.SEC_GROUP.location + identifier
+        entity = core_model.Resource(iden, os_addon.SEC_GROUP, mixins)
+        entity.attributes['occi.core.id'] = identifier
+        entity.extras = self.get_extras(extras)
+        self.cache[(entity.identifier, context.user_id)] = entity
+        result.append(entity)
+
+        return result
+
+    def _update_occi_osrule(self, entity, extras):
+        return entity

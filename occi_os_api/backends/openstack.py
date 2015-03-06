@@ -180,6 +180,23 @@ class SecurityRuleBackend(backend.KindBackend):
         except Exception as error:
             raise exceptions.HTTPError(500, str(error))
 
+    def retrieve(self, entity, extras):
+        """
+        Retrieve specified rule
+        """
+        context = extras['nova_ctx']
+        iden = entity.attributes['occi.core.id']
+        rule = security.retrieve_rule(
+            iden,
+            context
+        )
+
+        entity.attributes = {
+            'occi.network.security.protocol': '',
+            'occi.network.security.to': '',
+            'occi.network.security.from': '',
+            'occi.network.security.range': '',
+        }
 
 def make_sec_rule(entity, sec_grp_id):
     """

@@ -108,3 +108,4 @@ def retrieve_rule(uid, context):
     context -- The os context.
     """
     return get_openstack_api('security').get_rule(context, uid)
+
