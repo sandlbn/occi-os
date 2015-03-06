@@ -34,6 +34,7 @@ from occi_os_api.extensions import os_addon
 from occi_os_api.nova_glue import vm
 from occi_os_api.nova_glue import storage
 from occi_os_api.nova_glue import net
+from occi_os_api.nova_glue import security
 from occi_os_api.nova_glue import neutron
 
 from occi import registry as occi_registry
@@ -142,6 +143,9 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         ports = neutron.list_ports(context)
         port_ids = [item['id'] for item in ports]
 
+        secs = security.retrieve_groups_by_project(context)
+        sec_ids = [item['id'] for item in secs]
+
         if (key, context.user_id) in self.cache:
             # I have seen it - need to update or delete if gone in OS!
             # I have already seen it
@@ -166,6 +170,12 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 # can delete it because it was my item!
                 self.cache.pop((key, repr(extras)))
                 raise KeyError
+            if iden not in sec_ids and cached_item.kind == \
+                    os_addon.SEC_GROUP:
+                # it was delete in OS -> remove from cache + KeyError!
+                # can delete it because it was my item!
+                self.cache.pop((key, repr(extras)))
+                raise KeyError
             elif iden in net_ids:
                 # it also exists in OS -> update it!
                 result = self._update_occi_network(cached_item, extras)
@@ -173,6 +183,8 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 # it also exists in OS -> update it (take links, mixins
                 # from cached one)
                 result = self._update_occi_compute(cached_item, extras)
+            elif iden in sec_ids:
+                result = self._update_occi_osgroup(cached_item, extras)
             elif iden in stor_res_ids:
                 # it also exists in OS -> update it!
                 result = self._update_occi_storage(cached_item, extras)
@@ -194,6 +206,8 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 result = self._construct_occi_storage(iden, extras)[0]
             elif iden in port_ids:
                 result = self._construct_occi_networkinterface(iden, extras)[0]
+            elif iden in sec_ids:
+                result = self._construct_occi_security_group(iden, extras)[0]
             else:
                 # doesn't exist!
                 raise KeyError
@@ -237,6 +251,9 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         nets = neutron.list_networks(context)
         net_ids = [item['id'] for item in nets]
 
+        secs = security.retrieve_groups_by_project(context)
+        sec_ids = [item['id'] for item in secs]
+
         for item in self.cache.values():
             if item.extras is not None and item.extras['user_id'] != \
                     context.user_id:
@@ -265,6 +282,12 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 # add compute and it's links to result
                 self._update_occi_storage(item, extras)
                 result.append(item)
+            elif item_id in sec_ids and item.kind == \
+                    os_addon.SEC_GROUP:
+                # check & update (take links, mixins from cache)
+                # add compute and it's links to result
+                self._update_occi_osgroup(item, extras)
+                result.append(item)
             elif item_id not in net_ids and item.kind == \
                     infrastructure.NETWORK:
                 # remove item and it's links from cache!
@@ -288,6 +311,14 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
             else:
                 # construct (with links and mixins and add to cache!
                 ent_list = self._construct_occi_network(item['id'], extras)
+                result.extend(ent_list)
+        for item in secs:
+            if (os_addon.SEC_GROUP.location + item['id'],
+                    context.user_id) in self.cache:
+                continue
+            else:
+                # construct (with links and mixins and add to cache!
+                ent_list = self._construct_occi_security_group(item['id'], extras)
                 result.extend(ent_list)
         for item in vms:
             if (infrastructure.COMPUTE.location + item['uuid'],
@@ -476,4 +507,29 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         result.append(link)
         self.cache[(link.identifier, context.user_id)] = link
         return result
+
+    def _construct_occi_security_group(self, identifier, extras):
+        """
+        Contruct security group
+        :param identifier: Id of
+        :param extras:
+        :return: cache object
+        """
+        result = []
+        context = extras['nova_ctx']
+
+        group = security.retrieve_group_by_name(identifier, context)
+        mixins = []
+
+        iden = os_addon.SEC_GROUP.location + identifier
+        entity = core_model.Resource(iden, os_addon.SEC_GROUP, mixins)
+        entity.attributes['occi.core.id'] = identifier
+        entity.extras = self.get_extras(extras)
+        self.cache[(entity.identifier, context.user_id)] = entity
+        result.append(entity)
+
+        return result
+
+    def _update_occi_osgroup(self, entity, extras):
+        return entity
 

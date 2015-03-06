@@ -31,6 +31,12 @@ _SEC_RULE_ATTRIBUTES = {
     'occi.network.security.from': '',
     'occi.network.security.range': '',
 }
+
+
+_SEC_GROUP_ATTRIBUTES = {
+    'occi.network.security.name': '',
+}
+
 SEC_RULE = core_model.Kind(
     'http://schemas.openstack.org/occi/infrastructure/network/security#',
     'rule',
@@ -43,7 +49,9 @@ SEC_RULE = core_model.Kind(
 # Network security rule group
 SEC_GROUP = core_model.Mixin(
     'http://schemas.ogf.org/occi/infrastructure/security#',
-    'group', attributes=None)
+    'group',
+    attributes=_SEC_GROUP_ATTRIBUTES
+)
 
 # OS change adminstrative password action
 _OS_CHG_PWD_ATTRIBUTES = {'org.openstack.credentials.admin_pwd': '', }
