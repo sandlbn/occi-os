@@ -129,15 +129,15 @@ class SecurityGroupBackend(backend.UserDefinedMixinBackend):
         Retrieve specified security group.
         """
         context = extras['nova_ctx']
-        id = entity.attributes['occi.core.id']
-        security_group = security.retrieve_group_by_name(
-            id,
-            extras['nova_ctx']
+        iden = entity.attributes['occi.core.id']
+        security_group = security.retrieve_group(
+            iden,
+            context
         )
 
         entity.attributes = {
             'occi.core.id': id,
-            'occi.network.security.name': security_group["security_group"]["name"],
+            'occi.network.security.name': security_group["name"],
         }
 
 class SecurityRuleBackend(backend.KindBackend):

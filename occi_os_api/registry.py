@@ -518,7 +518,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         result = []
         context = extras['nova_ctx']
 
-        group = security.retrieve_group_by_name(identifier, context)
+        group = security.retrieve_group(identifier, context)
         mixins = []
 
         iden = os_addon.SEC_GROUP.location + identifier
