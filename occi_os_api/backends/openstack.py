@@ -136,7 +136,7 @@ class SecurityGroupBackend(backend.UserDefinedMixinBackend):
         )
 
         entity.attributes = {
-            'occi.core.id': id,
+            'occi.core.id': iden,
             'occi.network.security.name': security_group["name"],
         }
 

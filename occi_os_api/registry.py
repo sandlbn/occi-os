@@ -575,14 +575,13 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         mixins = []
 
         group = security.retrieve_group(identifier, context)
-        if len(group.get('rules') > 0):
+        if len(group.get('rules')) > 0:
             for rule in group.get('rules'):
-                mixins.append(
-                    self. _construct_occi_security_rule(
-                        rule.get('id'),
-                        extras
-                    )
+                self. _construct_occi_security_rule(
+                    rule.get('id'),
+                    extras
                 )
+            mixins = [os_addon.SEC_RULE]
 
         iden = os_addon.SEC_GROUP.location + identifier
         entity = core_model.Resource(iden, os_addon.SEC_GROUP, mixins)
