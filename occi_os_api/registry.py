@@ -322,12 +322,12 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 # remove item
                 self.cache.pop((item.identifier, item.extras['user_id']))
         for item in network_ids:
-            if (infrastructure.NETWORK.location + item['id'],
+            if (infrastructure.NETWORK.location + item,
                     context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
-                ent_list = self._construct_occi_network(item['id'], extras)
+                ent_list = self._construct_occi_network(item, extras)
                 result.extend(ent_list)
         for item in sec_group_ids:
             if (os_addon.SEC_GROUP.location + item,
