@@ -332,38 +332,38 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 ent_list = self._construct_occi_network(item['id'], extras)
                 result.extend(ent_list)
         for item in sec_group_ids:
-            if (os_addon.SEC_GROUP.location + item['id'],
+            if (os_addon.SEC_GROUP.location + item,
                     context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
-                ent_list = self._construct_occi_security_group(item.get('id'), extras)
+                ent_list = self._construct_occi_security_group(item, extras)
                 result.extend(ent_list)
         for item in sec_rule_ids:
-            if (os_addon.SEC_RULE.location + item['id'],
+            if (os_addon.SEC_RULE.location + item,
                     context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
-                ent_list = self._construct_occi_security_rule(item.get('id'), extras)
+                ent_list = self._construct_occi_security_rule(item, extras)
                 result.extend(ent_list)
         for item in compute_ids:
-            if (infrastructure.COMPUTE.location + item.get('uuid'),
+            if (infrastructure.COMPUTE.location + item,
                     context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
                 # add compute and it's linke to result
-                ent_list = self._construct_occi_compute(item.get('uuid'), extras)
+                ent_list = self._construct_occi_compute(item, extras)
                 result.extend(ent_list)
         for item in storage_ids:
-            if (infrastructure.STORAGE.location + item.get('id'),
+            if (infrastructure.STORAGE.location + item,
                     context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
                 # add compute and it's linke to result
-                ent_list = self._construct_occi_storage(item.get('id'), extras)
+                ent_list = self._construct_occi_storage(item, extras)
                 result.extend(ent_list)
         return result
 
@@ -650,7 +650,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
             return [item.get('id') for item in sec_groups if item.get('id')]
         elif resource_name == 'security_rule':
             sec_groups = security.retrieve_groups_by_project(context)
-            sec_rules = [rule.get('rules') for rule in sec_groups if rule.get('rules')]
+            sec_rules = [rule.get('rules') for rule in sec_groups if rule.get('rules')][0]
             return [rule.get('id') for rule in sec_rules if rule.get('id')]
         else:
             return KeyError("Resource name %s not found" % str(resource_name))
