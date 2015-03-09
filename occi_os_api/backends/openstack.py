@@ -192,10 +192,10 @@ class SecurityRuleBackend(backend.KindBackend):
         )
 
         entity.attributes = {
-            'occi.network.security.protocol': rule.get('protocol'),
-            'occi.network.security.to': rule.get('port_range_max'),
-            'occi.network.security.from': rule.get('port_range_min'),
-            'occi.network.security.range': rule.get('remote_ip_prefix'),
+            'occi.network.security.protocol': rule.get('protocol', ''),
+            'occi.network.security.to': rule.get('port_range_max', ''),
+            'occi.network.security.from': rule.get('port_range_min', ''),
+            'occi.network.security.range': rule.get('remote_ip_prefix', ''),
         }
 
 def make_sec_rule(entity, sec_grp_id):
