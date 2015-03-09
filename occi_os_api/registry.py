@@ -572,7 +572,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         result = []
         context = extras['nova_ctx']
 
-        group = security.retrieve_rule(identifier, context)
+        rule = security.retrieve_rule(identifier, context)
         LOG.debug(
             "Constructing security rule  %s." % identifier
         )

@@ -107,5 +107,5 @@ def retrieve_rule(uid, context):
     uid -- Id of the rule (entity.attributes['occi.core.id'])
     context -- The os context.
     """
-    return get_openstack_api('security').get_rule(context, uid)
-
+    rule = get_openstack_api('security').get_rule(context, uid)
+    return rule['security_group_rule']
