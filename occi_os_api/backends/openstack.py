@@ -124,6 +124,21 @@ class SecurityGroupBackend(backend.UserDefinedMixinBackend):
                                                          extras['nova_ctx'])
         security.remove_group(security_group, context)
 
+    def retrieve(self, entity, extras):
+        """
+        Retrieve specified security group.
+        """
+        context = extras['nova_ctx']
+        iden = entity.attributes['occi.core.id']
+        security_group = security.retrieve_group(
+            iden,
+            context
+        )
+
+        entity.attributes = {
+            'occi.core.id': iden,
+            'occi.network.security.name': security_group["name"],
+        }
 
 class SecurityRuleBackend(backend.KindBackend):
     """
@@ -165,6 +180,23 @@ class SecurityRuleBackend(backend.KindBackend):
         except Exception as error:
             raise exceptions.HTTPError(500, str(error))
 
+    def retrieve(self, entity, extras):
+        """
+        Retrieve specified rule
+        """
+        context = extras['nova_ctx']
+        iden = entity.attributes['occi.core.id']
+        rule = security.retrieve_rule(
+            iden,
+            context
+        )
+
+        entity.attributes = {
+            'occi.network.security.protocol': rule.get('protocol'),
+            'occi.network.security.to': rule.get('port_range_max'),
+            'occi.network.security.from': rule.get('port_range_min'),
+            'occi.network.security.range': rule.get('remote_ip_prefix'),
+        }
 
 def make_sec_rule(entity, sec_grp_id):
     """

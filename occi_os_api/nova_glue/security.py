@@ -56,6 +56,14 @@ def retrieve_group_by_name(name, context):
     """
     return get_openstack_api('security').list(context, names=[name], project=context.project_id)[0]
 
+def retrieve_group(iden, context):
+    """
+    Retrieve the security group
+
+    mixin_term -- The term of the mixin representing the group.
+    context -- The os context.
+    """
+    return get_openstack_api('security').get(context, iden)
 
 def retrieve_groups_by_project(context):
     """
@@ -100,3 +108,4 @@ def retrieve_rule(uid, context):
     context -- The os context.
     """
     return get_openstack_api('security').get_rule(context, uid)
+
