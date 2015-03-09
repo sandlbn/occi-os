@@ -148,7 +148,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         sec_group_ids = OCCIRegistry.get_resource_ids(context, 'security_group')
         sec_rule_ids = OCCIRegistry.get_resource_ids(context, 'security_rule')
         network_ids = OCCIRegistry.get_resource_ids(context, 'network')
-        storage_ids = OCCIRegistry.get_resource_ids(context, 'storage_rule')
+        storage_ids = OCCIRegistry.get_resource_ids(context, 'storage')
         port_ids = OCCIRegistry.get_resource_ids(context, 'port')
 
         if (key, context.user_id) in self.cache:
@@ -263,7 +263,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         sec_group_ids = OCCIRegistry.get_resource_ids(context, 'security_group')
         sec_rule_ids = OCCIRegistry.get_resource_ids(context, 'security_rule')
         network_ids = OCCIRegistry.get_resource_ids(context, 'network')
-        storage_ids = OCCIRegistry.get_resource_ids(context, 'storage_rule')
+        storage_ids = OCCIRegistry.get_resource_ids(context, 'storage')
 
         for item in self.cache.values():
             if item.extras is not None and item.extras['user_id'] != \
@@ -324,8 +324,6 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         for item in network_ids:
             if (infrastructure.NETWORK.location + item['id'],
                     context.user_id) in self.cache:
-                for link in item.links:
-                    self.cache.pop((link.identifier, item.extras['user_id']))
                 continue
             else:
                 # construct (with links and mixins and add to cache!
@@ -353,7 +351,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 continue
             else:
                 # construct (with links and mixins and add to cache!
-                # add compute and it's linke to result
+                # add compute and it's links to result
                 ent_list = self._construct_occi_compute(item, extras)
                 result.extend(ent_list)
         for item in storage_ids:
@@ -362,7 +360,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 continue
             else:
                 # construct (with links and mixins and add to cache!
-                # add compute and it's linke to result
+                # add compute and it's links to result
                 ent_list = self._construct_occi_storage(item, extras)
                 result.extend(ent_list)
         return result
