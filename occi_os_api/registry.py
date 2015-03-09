@@ -107,6 +107,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         """
         Just here to prevent the super class from filling up an unused dict.
         """
+
         if (key, extras['nova_ctx'].user_id) not in self.cache and \
                 core_model.Link.kind in resource.kind.related:
             # don't need to cache twice, only adding links :-)
@@ -116,6 +117,10 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
             # don't need to cache twice, only adding links :-)
             self.cache[(key, extras['nova_ctx'].user_id)] = resource
 
+        LOG.debug(
+            "Adding resource %s" % key
+        )
+
     def delete_resource(self, key, extras):
         """
         Just here to prevent the super class from messing up.
@@ -123,6 +128,9 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         if (key, extras['nova_ctx'].user_id) in self.cache:
             self.cache.pop((key, extras['nova_ctx'].user_id))
 
+        LOG.debug(
+            "Deleting resource %s" % key
+        )
     # the following routines actually retrieve the info form OpenStack. Note
     # that a cache is used. The cache is stable - so delete resources
     # eventually also get deleted form the cache.
@@ -133,7 +141,9 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         """
         context = extras['nova_ctx']
         iden = key[key.rfind('/') + 1:]
-
+        LOG.debug(
+            "Getting Openstack resource %s" % iden
+        )
         compute_ids = OCCIRegistry.get_resource_ids(context, 'compute')
         sec_group_ids = OCCIRegistry.get_resource_ids(context, 'security_group')
         sec_rule_ids = OCCIRegistry.get_resource_ids(context, 'security_rule')
@@ -243,7 +253,9 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         """
         Retrieve a set of resources.
         """
-
+        LOG.debug(
+            "Getting Openstack resources"
+        )
         context = extras['nova_ctx']
         result = []
 
@@ -254,7 +266,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         storage_ids = OCCIRegistry.get_resource_ids(context, 'storage_rule')
 
         for item in self.cache.values():
-            if item.extras is not None and item.extras.get('user_id') != \
+            if item.extras is not None and item.extras['user_id'] != \
                     context.user_id:
                 # filter out items not belonging to this user!
                 continue
@@ -297,30 +309,30 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                     infrastructure.NETWORK:
                 # remove item and it's links from cache!
                 for link in item.links:
-                    self.cache.pop((link.identifier, item.extras.get('user_id')))
-                self.cache.pop((item.identifier, item.extras.get('user_id')))
+                    self.cache.pop((link.identifier, item.extras['user_id']))
+                self.cache.pop((item.identifier, item.extras['user_id']))
             elif item_id not in compute_ids and item.kind == \
                     infrastructure.COMPUTE:
                 # remove item and it's links from cache!
                 for link in item.links:
-                    self.cache.pop((link.identifier, item.extras.get('user_id')))
-                self.cache.pop((item.identifier, item.extras.get('user_id')))
+                    self.cache.pop((link.identifier, item.extras['user_id']))
+                self.cache.pop((item.identifier, item.extras['user_id']))
             elif item_id not in storage_ids and item.kind == \
                     infrastructure.STORAGE:
                 # remove item
-                self.cache.pop((item.identifier, item.extras.get('user_id')))
+                self.cache.pop((item.identifier, item.extras['user_id']))
         for item in network_ids:
-            if (infrastructure.NETWORK.location + item.get('id'),
+            if (infrastructure.NETWORK.location + item['id'],
                     context.user_id) in self.cache:
                 for link in item.links:
-                    self.cache.pop((link.identifier, item.extras.get('user_id')))
+                    self.cache.pop((link.identifier, item.extras['user_id']))
                 continue
             else:
                 # construct (with links and mixins and add to cache!
-                ent_list = self._construct_occi_network(item.get('id'), extras)
+                ent_list = self._construct_occi_network(item['id'], extras)
                 result.extend(ent_list)
         for item in sec_group_ids:
-            if (os_addon.SEC_GROUP.location + item.get('id'),
+            if (os_addon.SEC_GROUP.location + item['id'],
                     context.user_id) in self.cache:
                 continue
             else:
@@ -374,6 +386,10 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         result = []
         context = extras['nova_ctx']
 
+        LOG.debug(
+            "Constructing compute  %s." % identifier
+        )
+
         instance = vm.get_vm(identifier, context)
 
         # 1. get identifier
@@ -383,12 +399,12 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         result.append(entity)
 
         # 2. os and res templates
-        flavor_id = int(instance.get('instance_type_id'))
+        flavor_id = int(instance['instance_type_id'])
         res_tmp = self.get_category('/' + str(flavor_id) + '/', extras)
         if res_tmp:
             entity.mixins.append(res_tmp)
 
-        os_id = instance.get('image_ref')
+        os_id = instance['image_ref']
         image_id = vm.retrieve_image(os_id, context)['id']
         image_tmp = self.get_category('/' + image_id + '/', extras)
         if image_tmp:
@@ -440,6 +456,11 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         """
         result = []
         context = extras['nova_ctx']
+
+        LOG.debug(
+            "Constructing storage  %s." % identifier
+        )
+
         stor = storage.get_storage(identifier, context)
 
         # id, display_name, size, status
@@ -489,6 +510,10 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         result = []
         context = extras['nova_ctx']
 
+        LOG.debug(
+            "Constructing network  %s." % identifier
+        )
+
         net = neutron.retrieve_network(context, identifier)
         mixins = []
         if len(net['subnets']) > 0:
@@ -510,6 +535,11 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         """
         result = []
         context = extras['nova_ctx']
+
+        LOG.debug(
+            "Constructing network interface  %s." % identifier
+        )
+
         item = neutron.retrieve_port(context, identifier)
         iden = infrastructure.NETWORKINTERFACE.location + identifier
         # get network resource
@@ -539,14 +569,14 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
 
     def _construct_occi_security_rule(self, identifier, extras):
         """
-        Contruct security group
+        Contruct security rule
         """
         result = []
         context = extras['nova_ctx']
 
         group = security.retrieve_rule(identifier, context)
         LOG.debug(
-            "OCCI. Constructing security group %s." % group.get('id')
+            "Constructing security rule  %s." % identifier
         )
         mixins = []
 
@@ -574,7 +604,10 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
 
         mixins = []
 
+        LOG.debug("Constructing security group %s" % identifier)
+
         group = security.retrieve_group(identifier, context)
+
         if len(group.get('rules')) > 0:
             for rule in group.get('rules'):
                 self. _construct_occi_security_rule(
@@ -597,6 +630,8 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
 
     @staticmethod
     def get_resource_ids(context, resource_name):
+
+        LOG.debug("Getting resource ids from %s" % resource_name)
 
         if resource_name == 'compute':
             vms = vm.get_vms(context)
