@@ -40,6 +40,9 @@ from occi_os_api.nova_glue import neutron
 from occi import registry as occi_registry
 from occi import core_model
 from occi.extensions import infrastructure
+from nova.openstack.common import log
+
+LOG = log.getLogger(__name__)
 
 CONF = cfg.CONF
 
@@ -131,70 +134,63 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         context = extras['nova_ctx']
         iden = key[key.rfind('/') + 1:]
 
-        vms = vm.get_vms(context)
-        vm_res_ids = [item['uuid'] for item in vms]
-
-        stors = storage.get_storage_volumes(context)
-        stor_res_ids = [item['id'] for item in stors]
-
-        nets = neutron.list_networks(context)
-        net_ids = [item['id'] for item in nets]
-
-        ports = neutron.list_ports(context)
-        port_ids = [item['id'] for item in ports]
-
-        secs = security.retrieve_groups_by_project(context)
-        sec_ids = [item['id'] for item in secs]
-
-        secr = [rule.get('rules') for rule in secs if rule.get('rules')][0]
-        secr_ids = [rule.get('id') for rule in secr]
+        compute_ids = OCCIRegistry.get_resource_ids(context, 'compute')
+        sec_group_ids = OCCIRegistry.get_resource_ids(context, 'security_group')
+        sec_rule_ids = OCCIRegistry.get_resource_ids(context, 'security_rule')
+        network_ids = OCCIRegistry.get_resource_ids(context, 'network')
+        storage_ids = OCCIRegistry.get_resource_ids(context, 'storage_rule')
+        port_ids = OCCIRegistry.get_resource_ids(context, 'port')
 
         if (key, context.user_id) in self.cache:
             # I have seen it - need to update or delete if gone in OS!
             # I have already seen it
             cached_item = self.cache[(key, context.user_id)]
-            if iden not in net_ids and cached_item.kind == \
-                    infrastructure.NETWORK:
+            if iden not in network_ids \
+                    and cached_item.kind == infrastructure.NETWORK:
                 # it was delete in OS -> remove from cache + KeyError!
                 # can delete it because it was my item!
                 self.cache.pop((key, repr(extras)))
                 raise KeyError
-            if iden not in vm_res_ids and cached_item.kind == \
-                    infrastructure.COMPUTE:
+            if iden not in port_ids \
+                    and cached_item.kind == infrastructure.NETWORKINTERFACE:
+                self.cache.pop((key, repr(extras)))
+                raise KeyError
+            if iden not in compute_ids \
+                    and cached_item.kind == infrastructure.COMPUTE:
                 # it was delete in OS -> remove links, cache + KeyError!
                 # can delete it because it was my item!
                 for link in cached_item.links:
                     self.cache.pop((link.identifier, repr(extras)))
                 self.cache.pop((key, repr(extras)))
                 raise KeyError
-            if iden not in stor_res_ids and cached_item.kind == \
-                    infrastructure.STORAGE:
+            if iden not in storage_ids \
+                    and cached_item.kind == infrastructure.STORAGE:
                 # it was delete in OS -> remove from cache + KeyError!
                 # can delete it because it was my item!
                 self.cache.pop((key, repr(extras)))
                 raise KeyError
-            if iden not in sec_ids and cached_item.kind == \
-                    os_addon.SEC_GROUP:
+            if iden not in sec_group_ids \
+                    and cached_item.kind == os_addon.SEC_GROUP:
                 # it was delete in OS -> remove from cache + KeyError!
                 # can delete it because it was my item!
                 self.cache.pop((key, repr(extras)))
                 raise KeyError
-            if iden not in secr_ids and cached_item.kind == \
-                    os_addon.SEC_RULE:
+            if iden not in sec_rule_ids \
+                    and cached_item.kind == os_addon.SEC_RULE:
                 # it was delete in OS -> remove from cache + KeyError!
                 # can delete it because it was my item!
                 self.cache.pop((key, repr(extras)))
                 raise KeyError
-            elif iden in net_ids:
+            elif iden in network_ids:
                 # it also exists in OS -> update it!
                 result = self._update_occi_network(cached_item, extras)
-            elif iden in vm_res_ids:
+            elif iden in compute_ids:
                 # it also exists in OS -> update it (take links, mixins
                 # from cached one)
                 result = self._update_occi_compute(cached_item, extras)
-            elif iden in sec_ids:
-                result = self._update_occi_osgroup(cached_item, extras)
-            elif iden in stor_res_ids:
+            elif iden in sec_rule_ids:
+                result = self._update_occi_security_rule(cached_item, extras)
+            elif iden in storage_ids:
                 # it also exists in OS -> update it!
                 result = self._update_occi_storage(cached_item, extras)
             else:
@@ -205,19 +201,19 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
             return self.cache[(key, None)]
         else:
             # construct it.
-            if iden in net_ids:
+            if iden in network_ids:
                 # create new & add to cache!
                 result = self._construct_occi_network(iden, extras)[0]
-            elif iden in vm_res_ids:
+            elif iden in compute_ids:
                 # create new & add to cache!
                 result = self._construct_occi_compute(iden, extras)[0]
-            elif iden in stor_res_ids:
+            elif iden in storage_ids:
                 result = self._construct_occi_storage(iden, extras)[0]
             elif iden in port_ids:
                 result = self._construct_occi_networkinterface(iden, extras)[0]
-            elif iden in sec_ids:
+            elif iden in sec_group_ids:
                 result = self._construct_occi_security_group(iden, extras)[0]
-            elif iden in secr_ids:
+            elif iden in sec_rule_ids:
                 result = self._construct_occi_security_rule(iden, extras)[0]
             else:
                 # doesn't exist!
@@ -248,29 +244,17 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         Retrieve a set of resources.
         """
 
-        # TODO: add security rules!
-
         context = extras['nova_ctx']
         result = []
 
-        vms = vm.get_vms(context)
-        vm_res_ids = [item['uuid'] for item in vms]
-
-        stors = storage.get_storage_volumes(context)
-        stor_res_ids = [item['id'] for item in stors]
-
-        nets = neutron.list_networks(context)
-        net_ids = [item['id'] for item in nets]
-
-        secs = security.retrieve_groups_by_project(context)
-        sec_ids = [item['id'] for item in secs]
-
-        secr = [rule.get('rules') for rule in secs if rule.get('rules')][0]
-        secr_ids = [rule.get('id') for rule in secr]
-
+        compute_ids = OCCIRegistry.get_resource_ids(context, 'compute')
+        sec_group_ids = OCCIRegistry.get_resource_ids(context, 'security_group')
+        sec_rule_ids = OCCIRegistry.get_resource_ids(context, 'security_rule')
+        network_ids = OCCIRegistry.get_resource_ids(context, 'network')
+        storage_ids = OCCIRegistry.get_resource_ids(context, 'storage_rule')
 
         for item in self.cache.values():
-            if item.extras is not None and item.extras['user_id'] != \
+            if item.extras is not None and item.extras.get('user_id') != \
                     context.user_id:
                 # filter out items not belonging to this user!
                 continue
@@ -278,94 +262,96 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
             if item.extras is None:
                 # add to result set
                 result.append(item)
-            elif item_id in net_ids and item.kind == \
+            elif item_id in network_ids and item.kind == \
                     infrastructure.NETWORK:
                 # check & update (take links, mixins from cache)
                 # add compute and it's links to result
                 self._update_occi_network(item, extras)
                 result.append(item)
-            elif item_id in vm_res_ids and item.kind == \
+            elif item_id in compute_ids and item.kind == \
                     infrastructure.COMPUTE:
                 # check & update (take links, mixins from cache)
                 # add compute and it's links to result
                 self._update_occi_compute(item, extras)
                 result.append(item)
                 result.extend(item.links)
-            elif item_id in stor_res_ids and item.kind == \
+            elif item_id in storage_ids and item.kind == \
                     infrastructure.STORAGE:
                 # check & update (take links, mixins from cache)
                 # add compute and it's links to result
                 self._update_occi_storage(item, extras)
                 result.append(item)
-            elif item_id in sec_ids and item.kind == \
+            elif item_id in sec_group_ids and item.kind == \
                     os_addon.SEC_GROUP:
                 # check & update (take links, mixins from cache)
                 # add compute and it's links to result
-                self._update_occi_osgroup(item, extras)
+                self._update_occi_security_group(item, extras)
                 result.append(item)
-            elif item_id in secr_ids and item.kind == \
+            elif item_id in sec_rule_ids and item.kind == \
                     os_addon.SEC_RULE:
                 # check & update (take links, mixins from cache)
                 # add compute and it's links to result
-                self._update_occi_osrule(item, extras)
+                self._update_occi_security_rule(item, extras)
                 result.append(item)
-            elif item_id not in net_ids and item.kind == \
+            elif item_id not in network_ids and item.kind == \
                     infrastructure.NETWORK:
                 # remove item and it's links from cache!
                 for link in item.links:
-                    self.cache.pop((link.identifier, item.extras['user_id']))
-                self.cache.pop((item.identifier, item.extras['user_id']))
-            elif item_id not in vm_res_ids and item.kind == \
+                    self.cache.pop((link.identifier, item.extras.get('user_id')))
+                self.cache.pop((item.identifier, item.extras.get('user_id')))
+            elif item_id not in compute_ids and item.kind == \
                     infrastructure.COMPUTE:
                 # remove item and it's links from cache!
                 for link in item.links:
-                    self.cache.pop((link.identifier, item.extras['user_id']))
-                self.cache.pop((item.identifier, item.extras['user_id']))
-            elif item_id not in stor_res_ids and item.kind == \
+                    self.cache.pop((link.identifier, item.extras.get('user_id')))
+                self.cache.pop((item.identifier, item.extras.get('user_id')))
+            elif item_id not in storage_ids and item.kind == \
                     infrastructure.STORAGE:
                 # remove item
-                self.cache.pop((item.identifier, item.extras['user_id']))
-        for item in nets:
-            if (infrastructure.NETWORK.location + item['id'],
+                self.cache.pop((item.identifier, item.extras.get('user_id')))
+        for item in network_ids:
+            if (infrastructure.NETWORK.location + item.get('id'),
+                    context.user_id) in self.cache:
+                for link in item.links:
+                    self.cache.pop((link.identifier, item.extras.get('user_id')))
+                continue
+            else:
+                # construct (with links and mixins and add to cache!
+                ent_list = self._construct_occi_network(item.get('id'), extras)
+                result.extend(ent_list)
+        for item in sec_group_ids:
+            if (os_addon.SEC_GROUP.location + item.get('id'),
                     context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
-                ent_list = self._construct_occi_network(item['id'], extras)
+                ent_list = self._construct_occi_security_group(item.get('id'), extras)
                 result.extend(ent_list)
-        for item in secs:
-            if (os_addon.SEC_GROUP.location + item['id'],
-                    context.user_id) in self.cache:
-                continue
-            else:
-                # construct (with links and mixins and add to cache!
-                ent_list = self._construct_occi_security_group(item['id'], extras)
-                result.extend(ent_list)
-        for item in secr:
+        for item in sec_rule_ids:
             if (os_addon.SEC_RULE.location + item['id'],
                     context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
-                ent_list = self._construct_occi_security_rule(item['id'], extras)
+                ent_list = self._construct_occi_security_rule(item.get('id'), extras)
                 result.extend(ent_list)
-        for item in vms:
-            if (infrastructure.COMPUTE.location + item['uuid'],
+        for item in compute_ids:
+            if (infrastructure.COMPUTE.location + item.get('uuid'),
                     context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
                 # add compute and it's linke to result
-                ent_list = self._construct_occi_compute(item['uuid'], extras)
+                ent_list = self._construct_occi_compute(item.get('uuid'), extras)
                 result.extend(ent_list)
-        for item in stors:
-            if (infrastructure.STORAGE.location + item['id'],
+        for item in storage_ids:
+            if (infrastructure.STORAGE.location + item.get('id'),
                     context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
                 # add compute and it's linke to result
-                ent_list = self._construct_occi_storage(item['id'], extras)
+                ent_list = self._construct_occi_storage(item.get('id'), extras)
                 result.extend(ent_list)
         return result
 
@@ -397,12 +383,12 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         result.append(entity)
 
         # 2. os and res templates
-        flavor_id = int(instance['instance_type_id'])
+        flavor_id = int(instance.get('instance_type_id'))
         res_tmp = self.get_category('/' + str(flavor_id) + '/', extras)
         if res_tmp:
             entity.mixins.append(res_tmp)
 
-        os_id = instance['image_ref']
+        os_id = instance.get('image_ref')
         image_id = vm.retrieve_image(os_id, context)['id']
         image_tmp = self.get_category('/' + image_id + '/', extras)
         if image_tmp:
@@ -412,13 +398,20 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         net_links = net.get_network_details(identifier, context)
 
         for item in net_links:
-            source = self.get_resource(infrastructure.NETWORK.location +
-                                       str(item['net_id']), extras)
-            link = core_model.Link(infrastructure.NETWORKINTERFACE.location +
-                                   str(item['vif']),
-                                   infrastructure.NETWORKINTERFACE, [], source,
-                                   entity)
-            link.attributes['occi.core.id'] = str(item['vif'])
+            source = self.get_resource(
+                infrastructure.NETWORK.location +
+                str(item.get('net_id')),
+                extras
+            )
+            link = core_model.Link(
+                infrastructure.NETWORKINTERFACE.location +
+                str(item.get('vif')),
+                infrastructure.NETWORKINTERFACE,
+                [],
+                source,
+                entity
+            )
+            link.attributes['occi.core.id'] = str(item.get('vif'))
             link.extras = self.get_extras(extras)
             source.links.append(link)
             result.append(link)
@@ -457,12 +450,19 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         # create links on VM resources
         if stor['status'] == 'in-use':
             iden = str(uuid.uuid4())
-            source = self.get_resource(infrastructure.COMPUTE.location +
-                                       str(stor['instance_uuid']), extras)
-            link = core_model.Link(infrastructure.STORAGELINK.location +
-                                   iden,
-                                   infrastructure.STORAGELINK, [], source,
-                                   entity)
+            source = self.get_resource(
+                infrastructure.COMPUTE.location +
+                str(stor.get('instance_uuid')),
+                extras
+            )
+            link = core_model.Link(
+                infrastructure.STORAGELINK.location +
+                iden,
+                infrastructure.STORAGELINK,
+                [],
+                source,
+                entity
+            )
             link.attributes['occi.core.id'] = iden
             link.extras = self.get_extras(extras)
             source.links.append(link)
@@ -514,17 +514,17 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         iden = infrastructure.NETWORKINTERFACE.location + identifier
         # get network resource
         entity = self.get_resource(
-            infrastructure.COMPUTE.location + str(item['device_id']),
+            infrastructure.COMPUTE.location + str(item.get('device_id')),
             extras
         )
         # get compute resource
         source = self.get_resource(
-            infrastructure.NETWORK.location + str(item['network_id']),
+            infrastructure.NETWORK.location + str(item.get('network_id')),
             extras
         )
         # create link
         link = core_model.Link(
-            infrastructure.NETWORKINTERFACE.location + item['id'],
+            infrastructure.NETWORKINTERFACE.location + item.get('id'),
             infrastructure.NETWORKINTERFACE,
             [],
             source,
@@ -540,14 +540,14 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
     def _construct_occi_security_rule(self, identifier, extras):
         """
         Contruct security group
-        :param identifier: Id of
-        :param extras:
-        :return: cache object
         """
         result = []
         context = extras['nova_ctx']
 
         group = security.retrieve_rule(identifier, context)
+        LOG.debug(
+            "OCCI. Constructing security group %s." % group.get('id')
+        )
         mixins = []
 
         iden = os_addon.SEC_RULE.location + identifier
@@ -559,15 +559,15 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
 
         return result
 
-    def _update_occi_osgroup(self, entity, extras):
+    def _update_occi_security_group(self, entity, extras):
+        """
+        Update security group
+        """
         return entity
 
     def _construct_occi_security_group(self, identifier, extras):
         """
-        Contruct security group
-        :param identifier: Id of
-        :param extras:
-        :return: cache object
+        Construct security group
         """
         result = []
         context = extras['nova_ctx']
@@ -592,5 +592,30 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
 
         return result
 
-    def _update_occi_osrule(self, entity, extras):
+    def _update_occi_security_rule(self, entity, extras):
         return entity
+
+    @staticmethod
+    def get_resource_ids(context, resource_name):
+
+        if resource_name == 'compute':
+            vms = vm.get_vms(context)
+            return [item.get('uuid') for item in vms if item.get('uuid')]
+        elif resource_name == 'storage':
+            stors = storage.get_storage_volumes(context)
+            return [item.get('id') for item in stors if item.get('id')]
+        elif resource_name == 'network':
+            nets = neutron.list_networks(context)
+            return [item.get('id') for item in nets if item.get('id')]
+        elif resource_name == 'port':
+            ports = neutron.list_ports(context)
+            return [item.get('id') for item in ports if item.get('id')]
+        elif resource_name == 'security_group':
+            sec_groups = security.retrieve_groups_by_project(context)
+            return [item.get('id') for item in sec_groups if item.get('id')]
+        elif resource_name == 'security_rule':
+            sec_groups = security.retrieve_groups_by_project(context)
+            sec_rules = [rule.get('rules') for rule in sec_groups if rule.get('rules')]
+            return [rule.get('id') for rule in sec_rules if rule.get('id')]
+        else:
+            return KeyError("Resource name %s not found" % str(resource_name))

@@ -20,17 +20,15 @@
 Nova Network related 'glue' :-)
 """
 
-import logging
 
-from nova import compute
+
 
 from occi_os_api.nova_glue import vm
 from occi_os_api.utils import get_openstack_api
+from nova.openstack.common import log
 
-# Connect to nova :-)
 
-
-LOG = logging.getLogger(__name__)
+LOG = log.getLogger(__name__)
 
 
 def get_network_details(uid, context):

@@ -26,11 +26,11 @@ NotImplementedErrors when creating networks:
         neutronv2/api.py#L1018
 """
 
-import logging
+from nova.openstack.common import log
 from neutronclient.neutron import client
 from occi_os_api.utils import get_neutron_url
 
-LOG = logging.getLogger(__name__)
+LOG = log.getLogger(__name__)
 
 
 def list_networks(context):
@@ -70,8 +70,8 @@ def retrieve_network(context, iden):
 
     try:
         neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
-        tmp = neutron.show_network(iden)
-        return tmp['network']
+        network = neutron.show_network(iden)
+        return network.get('network')
     except Exception as err:
         raise AttributeError(err)
 
