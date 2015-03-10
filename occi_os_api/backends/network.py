@@ -77,12 +77,8 @@ class NetworkBackend(backend.KindBackend, backend.ActionBackend):
         """
         Currently unsupported.
         """
-        entity.actions = actions
+        entity.actions = action
 
-        if action not in entity.actions:
-            raise AttributeError("This action is currently not applicable.")
-        elif action == infrastructure.START:
-            vm.start_vm(uid, context)
         raise AttributeError('Currently not supported.')
 
 

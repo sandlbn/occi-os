@@ -28,7 +28,7 @@ NotImplementedErrors when creating networks:
 
 from nova.openstack.common import log
 from neutronclient.neutron import client
-from neutron.common import constants
+from nova.network.neutronv2 import constants
 from occi_os_api.utils import get_neutron_url
 
 LOG = log.getLogger(__name__)
@@ -38,10 +38,10 @@ def list_networks(context):
     """
     List networks.
     """
-    tokn = context.auth_token
+    token = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=token)
         tmp = neutron.list_networks()
         return tmp['networks']
     except Exception as err:
@@ -52,10 +52,10 @@ def create_network(context):
     """
     Create a new network with subnet.
     """
-    tokn = context.auth_token
+    token = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=token)
         network = {'admin_state_up': True}
         tmp = neutron.create_network({'network': network})
         return tmp['network']['id']
@@ -67,10 +67,10 @@ def retrieve_network(context, iden):
     """
     Retrieve network information.
     """
-    tokn = context.auth_token
+    token = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=token)
         network = neutron.show_network(iden)
         return network.get('network')
     except Exception as err:
@@ -81,10 +81,10 @@ def delete_network(context, iden):
     """
     Delete a network.
     """
-    tokn = context.auth_token
+    token = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=token)
         neutron.delete_network(iden)
     except Exception as err:
         raise AttributeError(err)
@@ -94,11 +94,11 @@ def create_subnet(context, iden, cidr, gw, dynamic=True):
     """
     Create a subnet for a network.
     """
-    tokn = context.auth_token
+    token = context.auth_token
     tent = context.tenant
 
     try:
-        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=token)
 
         subnet = {'network_id': iden,
                   'ip_version': 4,
@@ -115,10 +115,10 @@ def retrieve_subnet(context, iden):
     """
     Retrieve a subnet.
     """
-    tokn = context.auth_token
+    token = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=token)
         return neutron.show_subnet(iden)
     except Exception as err:
         raise AttributeError(err)
@@ -128,10 +128,10 @@ def delete_subnet(context, iden):
     """
     Delete a subnet.
     """
-    tokn = context.auth_token
+    token = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=token)
         return neutron.delete_subnet(iden)
     except Exception as err:
         raise AttributeError(err)
@@ -141,11 +141,11 @@ def create_router(context, source_id, target_id):
     """
     Create a router.
     """
-    tokn = context.auth_token
+    token = context.auth_token
 
     try:
         # TODO: check if we can do this for all!
-        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=token)
 
         router = neutron.create_router({'router': {'name': 'occirouter'}})
         subnet = neutron.list_subnets(network_id=source_id)['subnets'][0]
@@ -164,10 +164,10 @@ def delete_router(context, router_id, network_id):
     """
     Remove a router.
     """
-    tokn = context.auth_token
+    token = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=token)
         neutron.remove_gateway_router(router_id)
         subnet = neutron.list_subnets(network_id=network_id)['subnets'][0]
         neutron.remove_interface_router(router_id, {'subnet_id': subnet['id']})
@@ -216,10 +216,10 @@ def retrieve_port(context, iden, **kwargs):
     """
     Retrieve port information.
     """
-    tokn = context.auth_token
+    token = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=token)
         port = neutron.show_port(iden, **kwargs)
         return port['port']
     except Exception as err:
@@ -229,10 +229,10 @@ def list_ports(context, **kwargs):
     """
     List ports
     """
-    tokn = context.auth_token
+    token = context.auth_token
 
     try:
-        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=token)
         ports = neutron.list_ports(**kwargs)
         return ports['ports']
     except Exception as err:
