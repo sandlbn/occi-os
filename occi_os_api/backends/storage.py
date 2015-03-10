@@ -31,7 +31,7 @@ from occi.extensions import infrastructure
 
 from occi_os_api.nova_glue import storage
 from occi_os_api.nova_glue import vm
-
+from occi_os_api.utils import get_image_name
 
 class StorageBackend(backend.KindBackend, backend.ActionBackend):
     """
@@ -80,8 +80,8 @@ class StorageBackend(backend.KindBackend, backend.ActionBackend):
 
         volume = storage.get_storage(v_id, extras['nova_ctx'])
 
-        entity.attributes['occi.core.title'] = str(volume['name'])
-        entity.attributes['occi.storage.size'] = str(float(volume['size']))
+        entity.attributes['occi.core.title'] = str(get_image_name(volume))
+        entity.attributes['occi.storage.size'] = str(float(volume.get('size')))
 
         # OS volume states:
         #       available, creating, deleting, in-use, error, error_deleting

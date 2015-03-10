@@ -154,9 +154,16 @@ class SecurityRuleBackend(backend.KindBackend):
         """
         sec_mixin = get_sec_mixin(entity)
         context = extras['nova_ctx']
-        security_group = security.retrieve_group_by_name(sec_mixin.term,
-                                                         context)
-        sg_rule = make_sec_rule(entity, security_group['id'])
+
+        security_group = security.retrieve_group_by_name(
+            sec_mixin.term,
+            context
+        )
+
+        sg_rule = make_sec_rule(
+            entity,
+            security_group['id']
+        )
 
         if security_group_rule_exists(security_group, sg_rule):
             #This rule already exists in group
@@ -164,8 +171,12 @@ class SecurityRuleBackend(backend.KindBackend):
                   str(security_group)
             raise AttributeError(msg)
 
-        rule = security.create_rule(sec_mixin.term, security_group['id'],
-                                    [sg_rule], context)
+        rule = security.create_rule(
+            sec_mixin.term,
+            security_group['id'],
+            [sg_rule],
+            context
+        )
         entity.attributes['occi.core.id'] = str(rule['id'])
 
     def delete(self, entity, extras):

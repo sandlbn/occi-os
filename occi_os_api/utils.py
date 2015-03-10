@@ -51,10 +51,23 @@ def occify_terms(term_name):
     Occifies a term_name so that it is compliant with GFD 185.
     """
     if term_name:
-        return term_name.strip().replace(' ', '_').replace('.', '-').lower()
+        return str(term_name).strip().replace(' ', '_').replace('.', '-').lower()
 
 def sanitize(value):
+    """
+    Removes empty spaces from api responses, returning empty string if response is None
+    """
     if value:
-        return value.strip().lower()
+        return str(value).strip().lower()
     else:
         return ''
+
+def get_image_name(image):
+    """
+    Return image name if Image name is not None
+    if Image name is None return Image Id
+    """
+    if image.get('name'):
+        return image.get('name')
+    else:
+        return image.get('id')
