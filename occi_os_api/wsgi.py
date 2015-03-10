@@ -171,9 +171,12 @@ class OCCIApplication(occi_wsgi.Application, wsgi.Application):
         occi_lst = [item.term for item in self.registry.get_categories(
             extras) if item.scheme == template_schema]
         for item in list(set(occi_lst) - set(os_lst)):
-            self.registry.delete_mixin(os_mixins.OsTemplate(template_schema,
-                                                            item),
-                                       extras)
+            self.registry.delete_mixin(
+                os_mixins.OsTemplate(
+                    template_schema,
+                    item
+                ),
+                extras)
 
         for img in images:
             # If the image is a kernel or ram one
@@ -214,6 +217,7 @@ class OCCIApplication(occi_wsgi.Application, wsgi.Application):
         os_lst = [occify_terms(item) for item in os_flavours.keys()]
         occi_lst = [item.term for item in self.registry.get_categories(
             extras) if item.scheme == template_schema]
+
         for item in list(set(occi_lst) - set(os_lst)):
             self.registry.delete_mixin(os_mixins.ResourceTemplate(
                 template_schema, item), extras)
@@ -260,7 +264,7 @@ class OCCIApplication(occi_wsgi.Application, wsgi.Application):
                     scheme=sec_grp,
                     related=[os_addon.SEC_GROUP],
                     attributes=None,
-                    title="Security group: %s" % group['name'],
+                    title="Security group: %s" % group.get('name'),
                     location='/security/' + ctg_term + '/')
                 try:
                     self.registry.get_backend(sec_mix, extras)

@@ -49,12 +49,14 @@ class NetworkBackend(backend.KindBackend, backend.ActionBackend):
     def retrieve(self, entity, extras):
         ctx = extras['nova_ctx']
         iden = entity.attributes['occi.core.id']
-        tmp = neutron.retrieve_network(ctx, iden)
+        network = neutron.retrieve_network(ctx, iden)
 
-        entity.attributes = {'occi.core.id': iden,
-                             'occi.network.vlan': '1',
-                             'occi.network.label': tmp['name'],
-                             'occi.network.state': 'active'}
+        entity.attributes = {
+            'occi.core.id': iden,
+            'occi.network.vlan': '1',
+            'occi.network.label': network.get('name'),
+            'occi.network.state': 'active'
+        }
 
     def update(self, old, new, extras):
         """
@@ -75,7 +77,12 @@ class NetworkBackend(backend.KindBackend, backend.ActionBackend):
         """
         Currently unsupported.
         """
-        # TODO: UP/DOWN actions
+        entity.actions = actions
+
+        if action not in entity.actions:
+            raise AttributeError("This action is currently not applicable.")
+        elif action == infrastructure.START:
+            vm.start_vm(uid, context)
         raise AttributeError('Currently not supported.')
 
 

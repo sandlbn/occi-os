@@ -21,7 +21,7 @@ Security related 'glue'
 """
 
 from occi_os_api.utils import get_openstack_api
-
+from neutronclient.common.exceptions import ConnectionFailed
 
 # TODO: exception handling
 
@@ -34,6 +34,7 @@ def create_group(name, description, context):
     description -- Description.
     context -- The os context.
     """
+
     get_openstack_api('security').create_security_group(context, name, description)
 
 
@@ -71,8 +72,10 @@ def retrieve_groups_by_project(context):
 
     context -- The os context.
     """
-    return get_openstack_api('security').list(context, project=context.project_id)
-
+    try:
+        return get_openstack_api('security').list(context, project=context.project_id)
+    except ConnectionFailed as e:
+        return AttributeError("Can't connect to the neutron API server %s" % e)
 
 def create_rule(name, iden, rule, context):
     """

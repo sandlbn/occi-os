@@ -28,6 +28,7 @@ NotImplementedErrors when creating networks:
 
 from nova.openstack.common import log
 from neutronclient.neutron import client
+from neutron.common import constants
 from occi_os_api.utils import get_neutron_url
 
 LOG = log.getLogger(__name__)
@@ -179,17 +180,21 @@ def add_floating_ip(context, iden, network_id):
     """
     Add a floating ip.
     """
-    tokn = context.auth_token
+    token = context.auth_token
+    neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=token)
 
     try:
-        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
-        tmp = list_ports(device_id=iden)
+        port = list_ports(device_id=iden)
 
-        if len(tmp) == 0:
+        if len(port) == 0:
             return None
         else:
-            body = {'floatingip': {'floating_network_id': network_id,
-                                   'port_id': tmp[0]['id']}}
+            body = {'floatingip':
+                        {
+                            'floating_network_id': network_id,
+                            'port_id': port[0]['id']
+                        }
+            }
             float = neutron.create_floatingip(body)
         return float
     except Exception as err:
@@ -200,10 +205,9 @@ def remove_floating_ip(context, iden):
     """
     Remove a floating ip.
     """
-    tokn = context.auth_token
-
+    token = context.auth_token
+    neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=token)
     try:
-        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=tokn)
         neutron.delete_floatingip(iden)
     except Exception as err:
         raise AttributeError(err)
@@ -234,3 +238,15 @@ def list_ports(context, **kwargs):
     except Exception as err:
         raise AttributeError(err)
 
+def get_port_status(context, iden):
+    """
+    Retrieve port status.
+    """
+    token = context.auth_token
+
+    try:
+        neutron = client.Client('2.0', endpoint_url=get_neutron_url(), token=token)
+        port = neutron.show_port(iden)
+        return port['port']
+    except Exception as err:
+        raise AttributeError(err)
