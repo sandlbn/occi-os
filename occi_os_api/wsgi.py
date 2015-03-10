@@ -178,7 +178,7 @@ class OCCIApplication(occi_wsgi.Application, wsgi.Application):
         for img in images:
             # If the image is a kernel or ram one
             # and we're not to filter them out then register it.
-            if img.get('container_format') or img.get('disk_format') in ('ari', 'aki'):
+            if (img.get('container_format') or img.get('disk_format')) in ('ari', 'aki'):
                 LOG.debug(
                     'Not registering kernel/RAM image %s' % sanitize(
                         img.get('name')

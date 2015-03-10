@@ -47,7 +47,6 @@ class StorageBackend(backend.KindBackend, backend.ActionBackend):
             raise AttributeError('size attribute not found!')
         size = entity.attributes['occi.storage.size']
 
-        name = ''
         if 'occi.core.title' not in entity.attributes:
             name = str(uuid.uuid4())
         else:
