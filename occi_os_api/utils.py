@@ -52,3 +52,9 @@ def occify_terms(term_name):
     """
     if term_name:
         return term_name.strip().replace(' ', '_').replace('.', '-').lower()
+
+def sanitize(value):
+    if value:
+        return value.strip().lower()
+    else:
+        return ''

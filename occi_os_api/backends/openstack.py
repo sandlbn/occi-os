@@ -28,6 +28,7 @@ from occi import exceptions
 from occi_os_api.extensions import os_addon
 from occi_os_api.nova_glue import vm
 from occi_os_api.nova_glue import security
+from occi_os_api.utils import sanitize
 
 
 class OsComputeBackend(backend.MixinBackend, backend.ActionBackend):
@@ -192,10 +193,18 @@ class SecurityRuleBackend(backend.KindBackend):
         )
 
         entity.attributes = {
-            'occi.network.security.protocol': rule.get('protocol', ''),
-            'occi.network.security.to': rule.get('port_range_max', ''),
-            'occi.network.security.from': rule.get('port_range_min', ''),
-            'occi.network.security.range': rule.get('remote_ip_prefix', ''),
+            'occi.network.security.protocol': sanitize(
+                rule.get('protocol', '')
+            ),
+            'occi.network.security.to': sanitize(
+                rule.get('port_range_max', '')
+            ),
+            'occi.network.security.from': sanitize(
+                rule.get('port_range_min', '')
+            ),
+            'occi.network.security.range': sanitize(
+                rule.get('remote_ip_prefix', '')
+            ),
         }
 
 def make_sec_rule(entity, sec_grp_id):
