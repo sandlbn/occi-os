@@ -39,7 +39,9 @@ from occi_os_api.nova_glue import storage
 from occi_os_api.nova_glue import net
 from occi_os_api.nova_glue import security
 from occi_os_api.nova_glue import neutron
-from utils import is_compute, is_network, is_sec_rule, is_sec_group, is_networkinterface, is_storage
+from occi_os_api.utils import is_compute, is_network, is_sec_rule, \
+    is_sec_group, is_networkinterface, is_storage
+
 LOG = log.getLogger(__name__)
 
 CONF = cfg.CONF
