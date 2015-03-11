@@ -29,7 +29,7 @@ from occi import backend
 from occi.extensions import infrastructure
 
 from occi_os_api.nova_glue import neutron
-from utils import is_compute, is_network
+from occi_os_api.utils import is_compute, is_network
 
 
 class NetworkBackend(backend.KindBackend, backend.ActionBackend):
