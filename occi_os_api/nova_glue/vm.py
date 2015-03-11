@@ -22,7 +22,6 @@ VM related 'glue' :-)
 
 #pylint: disable=R0914,W0142,R0912,R0915
 
-from nova import compute
 from nova import utils
 from nova.compute import task_states
 from nova.compute import vm_states
@@ -34,7 +33,7 @@ from occi.extensions import infrastructure
 
 from occi_os_api.extensions import os_mixins
 from occi_os_api.extensions import os_addon
-from occi_os_api.utils import get_openstack_api
+from occi_os_api.utils import get_openstack_api, is_networkinterface
 
 
 LOG = log.getLogger(__name__)
@@ -93,7 +92,7 @@ def create_vm(entity, context):
             sg_names.append(secgroup["name"])
 
     for link in entity.links:
-        if link.kind == infrastructure.NETWORKINTERFACE:
+        if is_networkinterface(link.kind):
             net_id = link.target.attributes['occi.core.id']
             if requested_networks is None:
                 requested_networks = []

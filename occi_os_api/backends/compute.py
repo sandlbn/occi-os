@@ -22,12 +22,12 @@ The compute resource backend for OpenStack.
 
 #pylint: disable=W0232,R0201
 
+from occi.backend import KindBackend, ActionBackend
+from occi.extensions import infrastructure
+
 from occi_os_api.extensions import os_mixins
 from occi_os_api.extensions import os_addon
 from occi_os_api.nova_glue import vm
-
-from occi.backend import KindBackend, ActionBackend
-from occi.extensions import infrastructure
 
 
 class ComputeBackend(KindBackend, ActionBackend):
@@ -86,7 +86,8 @@ class ComputeBackend(KindBackend, ActionBackend):
 
         # set up to date attributes
         entity.attributes['occi.compute.hostname'] = instance['hostname']
-        # TODO: check to get arch from OS!
+        # it's tricky, probably will be available in kilo release,
+        # POF of this functionality is in the dev branch
         entity.attributes['occi.compute.architecture'] = 'x86'
         entity.attributes['occi.compute.cores'] = str(instance['vcpus'])
         entity.attributes['occi.compute.speed'] = str(0.0)  # N/A in instance

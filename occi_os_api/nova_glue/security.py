@@ -20,8 +20,10 @@
 Security related 'glue'
 """
 
-from occi_os_api.utils import get_openstack_api
 from neutronclient.common.exceptions import ConnectionFailed
+
+from occi_os_api.utils import get_openstack_api
+
 
 # TODO: exception handling
 
@@ -84,7 +86,6 @@ def create_rule(name, iden, rule, context):
     rule -- The rule.
     context -- The os context.
     """
-    # TODO: needs work!
     try:
         return get_openstack_api('security').add_rules(context, iden, name, rule)[0]
     except Exception as e:

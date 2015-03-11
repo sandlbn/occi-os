@@ -18,9 +18,15 @@
 
 from nova import compute
 from nova.image import glance
+
+from occi.extensions import infrastructure
 from oslo.config import cfg
 
+from occi_os_api.extensions import os_addon
+
+
 CONF = cfg.CONF
+
 
 def get_openstack_api(api):
     """
@@ -40,11 +46,13 @@ def get_openstack_api(api):
     else:
         raise ValueError('{0} API not found'.format(str(api)))
 
+
 def get_neutron_url():
     """
     returns neutron url based on oslo config
     """
     return CONF.neutron.url
+
 
 def occify_terms(term_name):
     """
@@ -52,6 +60,7 @@ def occify_terms(term_name):
     """
     if term_name:
         return str(term_name).strip().replace(' ', '_').replace('.', '-').lower()
+
 
 def sanitize(value):
     """
@@ -62,6 +71,7 @@ def sanitize(value):
     else:
         return ''
 
+
 def get_image_name(image):
     """
     Return image name if Image name is not None
@@ -71,3 +81,39 @@ def get_image_name(image):
         return image.get('name')
     else:
         return image.get('id')
+
+
+def is_compute(resource):
+    if resource == infrastructure.COMPUTE:
+        return True
+    return False
+
+
+def is_network(resource):
+    if resource == infrastructure.NETWORK:
+        return True
+    return False
+
+
+def is_networkinterface(resource):
+    if resource == infrastructure.IPNETWORKINTERFACE:
+        return True
+    return False
+
+
+def is_sec_group(resource):
+    if resource == os_addon.SEC_GROUP:
+        return True
+    return False
+
+
+def is_sec_rule(resource):
+    if resource == os_addon.SEC_RULE:
+        return True
+    return False
+
+
+def is_storage(resource):
+    if resource == infrastructure.STORAGE:
+        return True
+    return False

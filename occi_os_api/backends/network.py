@@ -29,6 +29,7 @@ from occi import backend
 from occi.extensions import infrastructure
 
 from occi_os_api.nova_glue import neutron
+from utils import is_compute, is_network
 
 
 class NetworkBackend(backend.KindBackend, backend.ActionBackend):
@@ -55,7 +56,7 @@ class NetworkBackend(backend.KindBackend, backend.ActionBackend):
             'occi.core.id': iden,
             'occi.network.vlan': '1',
             'occi.network.label': network.get('name'),
-            'occi.network.state': 'active'
+            'occi.network.state': network.get('status').lower()
         }
 
     def update(self, old, new, extras):
@@ -164,8 +165,7 @@ class NetworkInterfaceBackend(backend.KindBackend):
         b) between networks -> router
         """
         # TODO: attributes
-        if link.source.kind == infrastructure.COMPUTE \
-                and link.target.kind == infrastructure.NETWORK:
+        if is_compute(link.source.kind) and is_network(link.target.kind):
             src = link.source.attributes['occi.core.id']
             trg = link.target.attributes['occi.core.id']
             tmp = neutron.add_floating_ip(extras['nova_ctx'], src, trg)
@@ -175,8 +175,7 @@ class NetworkInterfaceBackend(backend.KindBackend):
             else:
                 # vnic
                 pass
-        elif link.source.kind == infrastructure.NETWORK \
-                and link.target.kind == infrastructure.NETWORK:
+        elif is_network(link.source.kind) and is_network(link.target.kind):
             # router
             # router between two networks
             src = link.source.attributes['occi.core.id']
@@ -208,13 +207,11 @@ class NetworkInterfaceBackend(backend.KindBackend):
         """
         Remove a floating ip!
         """
-        if link.source.kind == infrastructure.COMPUTE and \
-                link.target.kind == infrastructure.NETWORK:
+        if is_compute(link.source.kind) and is_network(link.target.kind):
             # remove floating ip.
             neutron.remove_floating_ip(extras['nova_ctx'],
                                        link.attributes['occi.core.id'])
-        elif link.source.kind == infrastructure.NETWORK \
-                and link.target.kind == infrastructure.NETWORK:
+        elif is_network(link.source.kind) and is_network(link.target.kind):
             # router between two networks
             neutron.delete_router(extras['nova_ctx'],
                                   link.attributes['occi.core.id'],
