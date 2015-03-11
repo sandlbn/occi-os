@@ -42,6 +42,7 @@ from occi_os_api.nova_glue import neutron
 from occi_os_api.utils import is_compute, is_network, is_sec_rule, \
     is_sec_group, is_networkinterface, is_storage
 
+
 LOG = log.getLogger(__name__)
 
 CONF = cfg.CONF
@@ -163,7 +164,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
             if iden not in port_ids and is_networkinterface(cached_item.kind):
                 self.cache.pop((key, repr(extras)))
                 raise KeyError
-            if iden not in is_compute(compute_ids) and cached_item.kind:
+            if iden not in compute_ids and is_compute(cached_item.kind):
                 # it was delete in OS -> remove links, cache + KeyError!
                 # can delete it because it was my item!
                 for link in cached_item.links:
