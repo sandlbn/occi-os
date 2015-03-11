@@ -49,7 +49,7 @@ setup(
               'occi_os_api.nova_glue'],
     zip_safe=False,
     install_requires=[
-        'setuptools', 'nova', 'python-neutronclient'
+        'setuptools', 'nova', 'python-neutronclient', 'pyssf'
         ],
     entry_points='''
       [paste.app_factory]

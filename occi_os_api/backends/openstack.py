@@ -28,6 +28,7 @@ from occi import exceptions
 from occi_os_api.extensions import os_addon
 from occi_os_api.nova_glue import vm
 from occi_os_api.nova_glue import security
+from occi_os_api.utils import sanitize
 
 
 class OsComputeBackend(backend.MixinBackend, backend.ActionBackend):
@@ -153,9 +154,16 @@ class SecurityRuleBackend(backend.KindBackend):
         """
         sec_mixin = get_sec_mixin(entity)
         context = extras['nova_ctx']
-        security_group = security.retrieve_group_by_name(sec_mixin.term,
-                                                         context)
-        sg_rule = make_sec_rule(entity, security_group['id'])
+
+        security_group = security.retrieve_group_by_name(
+            sec_mixin.term,
+            context
+        )
+
+        sg_rule = make_sec_rule(
+            entity,
+            security_group['id']
+        )
 
         if security_group_rule_exists(security_group, sg_rule):
             #This rule already exists in group
@@ -163,8 +171,12 @@ class SecurityRuleBackend(backend.KindBackend):
                   str(security_group)
             raise AttributeError(msg)
 
-        rule = security.create_rule(sec_mixin.term, security_group['id'],
-                                    [sg_rule], context)
+        rule = security.create_rule(
+            sec_mixin.term,
+            security_group['id'],
+            [sg_rule],
+            context
+        )
         entity.attributes['occi.core.id'] = str(rule['id'])
 
     def delete(self, entity, extras):
@@ -192,10 +204,18 @@ class SecurityRuleBackend(backend.KindBackend):
         )
 
         entity.attributes = {
-            'occi.network.security.protocol': rule.get('protocol'),
-            'occi.network.security.to': rule.get('port_range_max'),
-            'occi.network.security.from': rule.get('port_range_min'),
-            'occi.network.security.range': rule.get('remote_ip_prefix'),
+            'occi.network.security.protocol': sanitize(
+                rule.get('protocol', '')
+            ),
+            'occi.network.security.to': sanitize(
+                rule.get('port_range_max', '')
+            ),
+            'occi.network.security.from': sanitize(
+                rule.get('port_range_min', '')
+            ),
+            'occi.network.security.range': sanitize(
+                rule.get('remote_ip_prefix', '')
+            ),
         }
 
 def make_sec_rule(entity, sec_grp_id):
