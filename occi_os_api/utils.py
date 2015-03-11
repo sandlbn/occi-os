@@ -71,7 +71,8 @@ def sanitize(value):
     else:
         return ''
 
-
+def get_item_id(item):
+    return item.identifier[item.identifier.rfind('/') + 1:]
 def get_image_name(image):
     """
     Return image name if Image name is not None
