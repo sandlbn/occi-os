@@ -640,28 +640,26 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
             vms = vm.get_vms(context)
             resources['compute'] = \
                 [item.get('uuid') for item in vms if item.get('uuid')]
-        elif 'storage' in resource_names:
+        if 'storage' in resource_names:
             stors = storage.get_storage_volumes(context)
             resources['storage'] = \
                 [item.get('id') for item in stors if item.get('id')]
-        elif 'network' in resource_names:
+        if 'network' in resource_names:
             nets = neutron.list_networks(context)
             resources['network'] = \
                 [item.get('id') for item in nets if item.get('id')]
-        elif 'network_port' in resource_names:
+        if 'network_port' in resource_names:
             ports = neutron.list_ports(context)
             resources['network_port'] = \
                 [item.get('id') for item in ports if item.get('id')]
-        elif 'sec_group' in resource_names:
+        if 'sec_group' in resource_names:
             sec_groups = security.retrieve_groups_by_project(context)
             resources['sec_group'] = \
                 [item.get('id') for item in sec_groups if item.get('id')]
-        elif 'sec_rule' in resource_names:
+        if 'sec_rule' in resource_names:
             sec_groups = security.retrieve_groups_by_project(context)
             sec_rules = [rule.get('rules') for rule in sec_groups if rule.get('rules')][0]
             resources['sec_rule'] = \
                 [rule.get('id') for rule in sec_rules if rule.get('id')]
-        else:
-            return KeyError("Resource name %s not found" % str(resource_names))
 
         return resources
