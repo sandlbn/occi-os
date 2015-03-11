@@ -316,7 +316,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                     context.user_id:
                 # filter out items not belonging to this user!
                 continue
-            self.update_resource(self, item, result, res_ids, extras)
+            self.update_resource(item, result, res_ids, extras)
 
         for item in res_ids.get('network'):
             if (infrastructure.NETWORK.location + item,
