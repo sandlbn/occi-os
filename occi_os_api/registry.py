@@ -365,8 +365,6 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
     # Not part of parent
 
 
-
-
     def _update_occi_compute(self, entity, extras):
         """
         Update an occi compute resource instance.

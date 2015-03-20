@@ -20,12 +20,10 @@
 Nova Network related 'glue' :-)
 """
 
-
-
+from nova.openstack.common import log
 
 from occi_os_api.nova_glue import vm
 from occi_os_api.utils import get_openstack_api
-from nova.openstack.common import log
 
 
 LOG = log.getLogger(__name__)
@@ -41,7 +39,15 @@ def get_network_details(uid, context):
     vm_instance = vm.get_vm(uid, context)
     result = []
 
-    for item in get_openstack_api('neutron').get_instance_nw_info(context, vm_instance):
-        result.append({'vif': item['id'], 'net_id': item['network']['id']})
+    for item in get_openstack_api('neutron').get_instance_nw_info(
+            context,
+            vm_instance
+    ):
+        result.append(
+            {
+                'vif': item['id'],
+                'net_id': item['network']['id']
+            }
+        )
 
     return result

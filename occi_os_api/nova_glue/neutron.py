@@ -43,10 +43,11 @@ def list_networks(context):
     """
     List networks.
     """
-    networks = get_neutron_connection(context).list_networks()
-    return networks['networks']
-
-
+    try:
+        networks = get_neutron_connection(context).list_networks()
+        return networks['networks']
+    except Exception as e:
+        raise AttributeError(e.message)
 
 def create_network(context):
     """
@@ -54,10 +55,14 @@ def create_network(context):
     """
     try:
         network = {'admin_state_up': True}
-        tmp = get_neutron_connection(context).create_network({'network': network})
+        tmp = get_neutron_connection(context).create_network(
+            {
+                'network': network
+            }
+        )
         return tmp['network']['id']
-    except Exception as err:
-        raise AttributeError(err)
+    except Exception as e:
+        raise AttributeError(e.message)
 
 
 def retrieve_network(context, iden):
@@ -67,8 +72,8 @@ def retrieve_network(context, iden):
     try:
         network = get_neutron_connection(context).show_network(iden)
         return network.get('network')
-    except Exception as err:
-        raise AttributeError(err)
+    except Exception as e:
+        raise AttributeError(e.message)
 
 
 def delete_network(context, iden):
@@ -78,8 +83,8 @@ def delete_network(context, iden):
 
     try:
         get_neutron_connection(context).delete_network(iden)
-    except Exception as err:
-        raise AttributeError(err)
+    except Exception as e:
+        raise AttributeError(e.message)
 
 
 def create_subnet(context, iden, cidr, gw, dynamic=True):
@@ -99,17 +104,18 @@ def create_subnet(context, iden, cidr, gw, dynamic=True):
     try:
 
         get_neutron_connection(context).create_subnet({'subnet': subnet})
-    except Exception as err:
-        raise AttributeError(err)
+    except Exception as e:
+        raise AttributeError(e.message)
 
 
 def retrieve_subnet(context, iden):
     """
     Retrieve a subnet.
     """
-
-    return get_neutron_connection(context).show_subnet(iden)
-
+    try:
+        return get_neutron_connection(context).show_subnet(iden)
+    except Exception as e:
+        raise AttributeError(e.message)
 
 def delete_subnet(context, iden):
     """
@@ -117,8 +123,8 @@ def delete_subnet(context, iden):
     """
     try:
         return get_neutron_connection(context).delete_subnet(iden)
-    except Exception as err:
-        raise AttributeError(err)
+    except Exception as e:
+        raise AttributeError(e.message)
 
 
 def create_router(context, source_id, target_id):
@@ -144,8 +150,8 @@ def create_router(context, source_id, target_id):
                 {'network_id': target_id}
             )
         return router
-    except Exception as err:
-        raise AttributeError(err)
+    except Exception as e:
+        raise AttributeError(e.message)
 
 
 def delete_router(context, router_id, network_id):
@@ -175,17 +181,19 @@ def add_floating_ip(context, iden, network_id):
         if len(port) == 0:
             return None
         else:
-            body = {'floatingip':
-                        {
-                            'floating_network_id': network_id,
-                            'port_id': port[0]['id']
-                        }
+            body = {'floatingip': {
+                'floating_network_id': network_id,
+                'port_id': port[0]['id']}
             }
-            floating_ip = get_neutron_connection(context).create_floatingip(body)
-        return floating_ip
-    except Exception as err:
-        raise AttributeError(err)
+            floating_ip = get_neutron_connection(
+                context
+            ).create_floatingip(
+                body
+            )
 
+        return floating_ip
+    except Exception as e:
+        raise AttributeError(e.message)
 
 def remove_floating_ip(context, iden):
     """
@@ -202,7 +210,10 @@ def retrieve_port(context, iden, **kwargs):
     Retrieve port information.
     """
     try:
-        port = get_neutron_connection(context).show_port(iden, **kwargs)
+        port = get_neutron_connection(context).show_port(
+            iden,
+            **kwargs
+        )
         return port['port']
     except Exception as err:
         raise AttributeError(err)
@@ -211,7 +222,9 @@ def list_ports(context, **kwargs):
     """
     List ports
     """
-    ports = get_neutron_connection(context).list_ports(**kwargs)
+    ports = get_neutron_connection(context).list_ports(
+        **kwargs
+    )
     return ports['ports']
 
 def get_port_status(context, iden):

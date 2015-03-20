@@ -21,6 +21,7 @@ Storage related glue :-)
 """
 
 from occi import exceptions
+
 from occi_os_api.utils import get_openstack_api
 
 
@@ -73,7 +74,12 @@ def snapshot_storage_instance(uid, name, description, context):
     """
     try:
         instance = get_storage(uid, context)
-        get_openstack_api('volume').create_snapshot(context, instance, name, description)
+        get_openstack_api('volume').create_snapshot(
+            context,
+            instance,
+            name,
+            description
+        )
     except Exception as e:
         raise AttributeError(e.message)
 
@@ -86,7 +92,10 @@ def get_storage(uid, context):
     context -- the os context
     """
     try:
-        instance = get_openstack_api('volume').get(context, uid)
+        instance = get_openstack_api('volume').get(
+            context,
+            uid
+        )
     except Exception:
         raise exceptions.HTTPError(404, 'Volume not found!')
     return instance
