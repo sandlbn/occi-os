@@ -2,10 +2,10 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 #
-#    Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
+# Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
 #
 #         http://www.apache.org/licenses/LICENSE-2.0
@@ -38,6 +38,7 @@ def create_group(name, description, context):
     except Exception as e:
         raise AttributeError(e.message)
 
+
 def remove_group(group, context):
     """
     Remove a security group.
@@ -49,6 +50,7 @@ def remove_group(group, context):
         get_openstack_api('security').destroy(context, group)
     except Exception as e:
         raise AttributeError(e.message)
+
 
 def retrieve_group_by_name(name, context):
     """
@@ -66,6 +68,7 @@ def retrieve_group_by_name(name, context):
     except Exception as e:
         raise AttributeError(e.message)
 
+
 def retrieve_group(iden, context):
     """
     Retrieve the security group
@@ -78,6 +81,7 @@ def retrieve_group(iden, context):
     except Exception as e:
         raise AttributeError(e.message)
 
+
 def retrieve_groups_by_project(context):
     """
     Retrieve list of security groups by project.
@@ -88,6 +92,7 @@ def retrieve_groups_by_project(context):
         return get_openstack_api('security').list(context, project=context.project_id)
     except ConnectionFailed as e:
         return AttributeError("Can't connect to the neutron API server %s" % e)
+
 
 def create_rule(name, iden, rule, context):
     """

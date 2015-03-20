@@ -2,16 +2,16 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 #
-#    Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
+# Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#         http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
@@ -85,7 +85,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         backend is called.
         """
         if (hasattr(mixin, 'related') and
-                os_addon.SEC_GROUP in mixin.related):
+                    os_addon.SEC_GROUP in mixin.related):
             backend = self.get_backend(mixin, extras)
             backend.destroy(mixin, extras)
 
@@ -96,7 +96,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         Assigns user id and tenant id to user defined mixins
         """
         if (hasattr(category, 'related') and
-                os_addon.SEC_GROUP in category.related):
+                    os_addon.SEC_GROUP in category.related):
             backend = openstack.SecurityGroupBackend()
             backend.init_sec_group(category, extras)
 
@@ -110,11 +110,11 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         """
 
         if (key, extras['nova_ctx'].user_id) not in self.cache and \
-                core_model.Link.kind in resource.kind.related:
+                        core_model.Link.kind in resource.kind.related:
             # don't need to cache twice, only adding links :-)
             self.cache[(key, extras['nova_ctx'].user_id)] = resource
         elif (key, extras['nova_ctx'].user_id) not in self.cache and \
-                resource.kind == os_addon.SEC_RULE:
+                        resource.kind == os_addon.SEC_RULE:
             # don't need to cache twice, only adding links :-)
             self.cache[(key, extras['nova_ctx'].user_id)] = resource
 
@@ -132,6 +132,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         LOG.debug(
             "Deleting resource %s" % key
         )
+
     # the following routines actually retrieve the info form OpenStack. Note
     # that a cache is used. The cache is stable - so delete resources
     # eventually also get deleted form the cache.
@@ -320,7 +321,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
 
         for item in res_ids.get('network'):
             if (infrastructure.NETWORK.location + item,
-                    context.user_id) in self.cache:
+                context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
@@ -328,7 +329,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 result.extend(ent_list)
         for item in res_ids.get('sec_group'):
             if (os_addon.SEC_GROUP.location + item,
-                    context.user_id) in self.cache:
+                context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
@@ -336,7 +337,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 result.extend(ent_list)
         for item in res_ids.get('sec_rule'):
             if (os_addon.SEC_RULE.location + item,
-                    context.user_id) in self.cache:
+                context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
@@ -344,7 +345,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 result.extend(ent_list)
         for item in res_ids.get('compute'):
             if (infrastructure.COMPUTE.location + item,
-                    context.user_id) in self.cache:
+                context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
@@ -353,7 +354,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 result.extend(ent_list)
         for item in res_ids.get('storage'):
             if (infrastructure.STORAGE.location + item,
-                    context.user_id) in self.cache:
+                context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
@@ -604,7 +605,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
 
         if len(group.get('rules')) > 0:
             for rule in group.get('rules'):
-                self. _construct_occi_security_rule(
+                self._construct_occi_security_rule(
                     rule.get('id'),
                     extras
                 )
@@ -630,7 +631,6 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         :rtype : dictionary of ids
         """
         LOG.debug("Getting resource ids from %s" % resource_names)
-
 
         resources = {}
 

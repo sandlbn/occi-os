@@ -2,13 +2,13 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 #
-#    Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
+# Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#         http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 #    Unless required by applicable law or agreed to in writing, software
 #    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -45,14 +45,14 @@ class OsComputeBackend(backend.MixinBackend, backend.ActionBackend):
 
         # set additional actions
         if 'occi.compute.state' in entity.attributes and entity.attributes[
-                'occi.compute.state'] == 'active':
+            'occi.compute.state'] == 'active':
             entity.actions.append(os_addon.OS_CREATE_IMAGE)
             entity.actions.append(os_addon.OS_CHG_PWD)
 
         # add VNC link if available
         console = vm.get_vnc(uid, context)
         if console:
-            entity.attributes['org.openstack.compute.console.vnc'] =\
+            entity.attributes['org.openstack.compute.console.vnc'] = \
                 console['url']
         else:
             entity.attributes['org.openstack.compute.console.vnc'] = 'N/A'
@@ -70,7 +70,7 @@ class OsComputeBackend(backend.MixinBackend, backend.ActionBackend):
 
         if action == os_addon.OS_CHG_PWD:
             if 'org.openstack.credentials.admin_pwd' not in attributes:
-                msg = 'org.openstack.credentials.admin_pwd was not supplied'\
+                msg = 'org.openstack.credentials.admin_pwd was not supplied' \
                       ' in the request.'
                 raise AttributeError(msg)
 
@@ -141,6 +141,7 @@ class SecurityGroupBackend(backend.UserDefinedMixinBackend):
             'occi.network.security.name': security_group["name"],
         }
 
+
 class SecurityRuleBackend(backend.KindBackend):
     """
     Security rule backend.
@@ -167,7 +168,7 @@ class SecurityRuleBackend(backend.KindBackend):
 
         if security_group_rule_exists(security_group, sg_rule):
             #This rule already exists in group
-            msg = 'This rule already exists in group. %s' %\
+            msg = 'This rule already exists in group. %s' % \
                   str(security_group)
             raise AttributeError(msg)
 
@@ -217,6 +218,7 @@ class SecurityRuleBackend(backend.KindBackend):
                 rule.get('remote_ip_prefix', '')
             ),
         }
+
 
 def make_sec_rule(entity, sec_grp_id):
     """

@@ -2,9 +2,9 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 #
-#    Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
+# Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
 #
@@ -71,8 +71,11 @@ def sanitize(value):
     else:
         return ''
 
+
 def get_item_id(item):
     return item.identifier[item.identifier.rfind('/') + 1:]
+
+
 def get_image_name(image):
     """
     Return image name if Image name is not None

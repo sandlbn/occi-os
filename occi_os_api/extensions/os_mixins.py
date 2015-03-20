@@ -2,7 +2,7 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 #
-#    Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
+# Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -30,6 +30,7 @@ class OsTemplate(core_model.Mixin):
     Represents the OS Template mechanism as per OCCI specification.
     An OS template is equivalent to an image in OpenStack
     """
+
     def __init__(self, scheme, term, os_id=None, related=None, actions=None,
                  title='', attributes=None, location=None):
         super(OsTemplate, self).__init__(scheme, term, related, actions,

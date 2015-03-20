@@ -2,9 +2,9 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 #
-#    Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
+# Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
 #
@@ -33,6 +33,7 @@ from occi_os_api.nova_glue import storage
 from occi_os_api.nova_glue import vm
 from occi_os_api.utils import get_image_name
 
+
 class StorageBackend(backend.KindBackend, backend.ActionBackend):
     """
     Backend to handle storage resources.
@@ -60,7 +61,7 @@ class StorageBackend(backend.KindBackend, backend.ActionBackend):
 
         if new_volume['status'] == 'error':
             raise exceptions.HTTPError(500, 'There was an error creating the '
-                                       'volume')
+                                            'volume')
         entity.attributes['occi.core.id'] = str(vol_id)
         entity.identifier = infrastructure.STORAGE.location + vol_id
 
@@ -101,11 +102,11 @@ class StorageBackend(backend.KindBackend, backend.ActionBackend):
         if len(new.attributes) > 0:
             # support only title and summary changes now.
             if 'occi.core.title' in new.attributes and \
-                    len(new.attributes['occi.core.title']) > 0:
+                            len(new.attributes['occi.core.title']) > 0:
                 old.attributes['occi.core.title'] = \
                     new.attributes['occi.core.title']
             if 'occi.core.title' in new.attributes and \
-               len(new.attributes['occi.core.summary']) > 0:
+                            len(new.attributes['occi.core.summary']) > 0:
                 old.attributes['occi.core.summary'] = \
                     new.attributes['occi.core.summary']
 

@@ -2,15 +2,15 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 #
-#    Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
+# Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#         http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
-#    Unless required by applicable law or agreed to in writing, software
+# Unless required by applicable law or agreed to in writing, software
 #    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
@@ -88,7 +88,7 @@ def create_vm(entity, context):
         # call to create will fail.
         elif os_addon.SEC_GROUP in mixin.related:
             secgroup = get_openstack_api('compute').security_group_api.get(context,
-                                                          name=mixin.term)
+                                                                           name=mixin.term)
             sg_names.append(secgroup["name"])
 
     for link in entity.links:
@@ -153,7 +153,7 @@ def rebuild_vm(uid, image_href, context):
     kwargs = {}
     try:
         get_openstack_api('compute').rebuild(context, instance, image_href, admin_password,
-                            **kwargs)
+                                             **kwargs)
     except Exception as e:
         raise AttributeError(e.message)
 
@@ -174,7 +174,7 @@ def resize_vm(uid, flavor_id, context):
     try:
         flavor = flavors.get_flavor_by_flavor_id(flavor_id)
         get_openstack_api('compute').resize(context, instance, flavor_id=flavor['flavorid'],
-                           **kwargs)
+                                            **kwargs)
         ready = False
         i = 0
         # XXX are 15 secs enough to resize?
@@ -184,6 +184,7 @@ def resize_vm(uid, flavor_id, context):
             if state == 'resized':
                 ready = True
             import time
+
             time.sleep(1)
         instance = get_vm(uid, context)
         get_openstack_api('compute').confirm_resize(context, instance)
@@ -231,8 +232,8 @@ def snapshot_vm(uid, image_name, context):
     instance = get_vm(uid, context)
     try:
         get_openstack_api('compute').snapshot(context,
-                             instance,
-                             image_name)
+                                              instance,
+                                              image_name)
 
     except Exception as e:
         raise AttributeError(e.message)
@@ -360,8 +361,8 @@ def get_vnc(uid, context):
     instance = get_vm(uid, context)
     try:
         console = get_openstack_api('compute').get_vnc_console(context, instance, 'novnc')
-    except Exception:
-        LOG.warn('Console info is not available atm!')
+    except Exception as e:
+        LOG.warn('%s' % e.message)
     finally:
         return console
 
@@ -428,6 +429,7 @@ def get_vm_state(uid, context):
         actions = []
 
     return state, actions
+
 
 # Image management
 

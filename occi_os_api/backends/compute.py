@@ -2,7 +2,7 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 #
-#    Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
+# Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -41,9 +41,9 @@ class ComputeBackend(KindBackend, ActionBackend):
         """
         # ignore some attributes - done via templating
         if 'occi.compute.cores' in entity.attributes or \
-           'occi.compute.speed' in entity.attributes or \
-           'occi.compute.memory' in entity.attributes or \
-           'occi.compute.architecture' in entity.attributes:
+                        'occi.compute.speed' in entity.attributes or \
+                        'occi.compute.memory' in entity.attributes or \
+                        'occi.compute.architecture' in entity.attributes:
             raise AttributeError('There are unsupported attributes in the '
                                  'request.')
 
