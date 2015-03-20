@@ -35,9 +35,11 @@ from occi_os_api.utils import get_neutron_url
 
 LOG = log.getLogger(__name__)
 
+
 def get_neutron_connection(context):
     token = context.auth_token
     return client.Client('2.0', endpoint_url=get_neutron_url(), token=token)
+
 
 def list_networks(context):
     """
@@ -48,6 +50,7 @@ def list_networks(context):
         return networks['networks']
     except Exception as e:
         raise AttributeError(e.message)
+
 
 def create_network(context):
     """
@@ -116,6 +119,7 @@ def retrieve_subnet(context, iden):
         return get_neutron_connection(context).show_subnet(iden)
     except Exception as e:
         raise AttributeError(e.message)
+
 
 def delete_subnet(context, iden):
     """
@@ -195,6 +199,7 @@ def add_floating_ip(context, iden, network_id):
     except Exception as e:
         raise AttributeError(e.message)
 
+
 def remove_floating_ip(context, iden):
     """
     Remove a floating ip.
@@ -204,6 +209,7 @@ def remove_floating_ip(context, iden):
         get_neutron_connection(context).delete_floatingip(iden)
     except Exception as err:
         raise AttributeError(err)
+
 
 def retrieve_port(context, iden, **kwargs):
     """
@@ -215,8 +221,9 @@ def retrieve_port(context, iden, **kwargs):
             **kwargs
         )
         return port['port']
-    except Exception as err:
-        raise AttributeError(err)
+    except Exception as e:
+        raise AttributeError(e.message)
+
 
 def list_ports(context, **kwargs):
     """
@@ -227,9 +234,32 @@ def list_ports(context, **kwargs):
     )
     return ports['ports']
 
+
 def get_port_status(context, iden):
     """
     Retrieve port status.
     """
     port = get_neutron_connection(context).show_port(iden)
     return port['port']['status']
+
+
+def port_up(context, iden):
+    """
+    Set network port state to True
+    """
+    try:
+        if get_port_status(context, iden) != 'ACTIVE':
+            get_neutron_connection(context).update(iden, admin_state_up=True)
+    except Exception as e:
+        raise AttributeError(e.message)
+
+
+def port_down(context, iden):
+    """
+    Set network port state to False
+    """
+    try:
+        if get_port_status(context, iden) == 'ACTIVE':
+            get_neutron_connection(context).update(iden, admin_state_up=False)
+    except Exception as e:
+        raise AttributeError(e.message)

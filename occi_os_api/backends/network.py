@@ -164,7 +164,6 @@ class NetworkInterfaceBackend(backend.KindBackend):
            2) floating ips.
         b) between networks -> router
         """
-        # TODO: attributes
         if is_compute(link.source.kind) and is_network(link.target.kind):
             src = link.source.attributes['occi.core.id']
             trg = link.target.attributes['occi.core.id']
@@ -218,3 +217,23 @@ class NetworkInterfaceBackend(backend.KindBackend):
                                   link.source.attributes['occi.core.id'])
         else:
             raise AttributeError('Not supported.')
+
+
+    def action(self, entity, action, attributes, extras):
+        """
+        Perform an action.
+        """
+        # As there is no callback mechanism to update the state
+        # of computes known by occi, a call to get the latest representation
+        # must be made.
+        context = extras['nova_ctx']
+        uid = entity.attributes['occi.core.id']
+
+        if action not in entity.actions:
+            raise AttributeError("This action is currently not applicable.")
+        elif action == infrastructure.UP:
+            neutron.port_up(context, uid)
+        elif action == infrastructure.DOWN:
+            neutron.port_down(context, uid)
+
+
