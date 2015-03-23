@@ -128,7 +128,7 @@ class TestUtils(unittest.TestCase):
         """
 
         compute = infrastructure.COMPUTE
-        network = infrastructure.NETWORKINTERFACE
+        network = infrastructure.NETWORK
         network_interface = infrastructure.NETWORKINTERFACE
         storage = infrastructure.STORAGE
         security_group = os_addon.SEC_GROUP
