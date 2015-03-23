@@ -20,12 +20,13 @@
 Set of templates.
 """
 
-#pylint: disable=R0913,E1002,R0903,W0232
+# pylint: disable=R0913,E1002,R0903,W0232
 
 from occi import core_model
 
 
 class OsTemplate(core_model.Mixin):
+
     """
     Represents the OS Template mechanism as per OCCI specification.
     An OS template is equivalent to an image in OpenStack
@@ -39,6 +40,7 @@ class OsTemplate(core_model.Mixin):
 
 
 class ResourceTemplate(core_model.Mixin):
+
     """
     Here to make identification of template type easier in backends.
     """
@@ -53,6 +55,7 @@ class ResourceTemplate(core_model.Mixin):
 
 
 class UserSecurityGroupMixin(core_model.Mixin):
+
     """
     Empty Mixin.
     """

@@ -33,6 +33,7 @@ from occi_os_api.utils import is_compute, is_network
 
 
 class NetworkBackend(backend.KindBackend, backend.ActionBackend):
+
     """
     Backend to handle network resources.
     """
@@ -84,6 +85,7 @@ class NetworkBackend(backend.KindBackend, backend.ActionBackend):
 
 
 class IpNetworkBackend(backend.MixinBackend):
+
     """
     A mixin backend for the IPnetworking.
     """
@@ -149,6 +151,7 @@ class IpNetworkBackend(backend.MixinBackend):
 
 
 class NetworkInterfaceBackend(backend.KindBackend):
+
     """
     A backend for network links.
 
@@ -218,7 +221,6 @@ class NetworkInterfaceBackend(backend.KindBackend):
         else:
             raise AttributeError('Not supported.')
 
-
     def action(self, entity, action, attributes, extras):
         """
         Perform an action.
@@ -235,5 +237,3 @@ class NetworkInterfaceBackend(backend.KindBackend):
             neutron.port_up(context, uid)
         elif action == infrastructure.DOWN:
             neutron.port_down(context, uid)
-
-

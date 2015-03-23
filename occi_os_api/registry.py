@@ -20,9 +20,9 @@
 OCCI registry
 """
 
-#R0201:method could be func.E1002:old style obj,R0914-R0912:# of branches
-#E1121:# positional args.
-#pylint: disable=R0201,E1002,R0914,R0912,E1121
+# R0201:method could be func.E1002:old style obj,R0914-R0912:# of branches
+# E1121:# positional args.
+# pylint: disable=R0201,E1002,R0914,R0912,E1121
 
 import uuid
 from nova.openstack.common import log
@@ -49,6 +49,7 @@ CONF = cfg.CONF
 
 
 class OCCIRegistry(occi_registry.NonePersistentRegistry):
+
     """
     Registry for OpenStack.
 
@@ -85,7 +86,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         backend is called.
         """
         if (hasattr(mixin, 'related') and
-                    os_addon.SEC_GROUP in mixin.related):
+                os_addon.SEC_GROUP in mixin.related):
             backend = self.get_backend(mixin, extras)
             backend.destroy(mixin, extras)
 
@@ -96,7 +97,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         Assigns user id and tenant id to user defined mixins
         """
         if (hasattr(category, 'related') and
-                    os_addon.SEC_GROUP in category.related):
+                os_addon.SEC_GROUP in category.related):
             backend = openstack.SecurityGroupBackend()
             backend.init_sec_group(category, extras)
 
@@ -110,11 +111,11 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         """
 
         if (key, extras['nova_ctx'].user_id) not in self.cache and \
-                        core_model.Link.kind in resource.kind.related:
+                core_model.Link.kind in resource.kind.related:
             # don't need to cache twice, only adding links :-)
             self.cache[(key, extras['nova_ctx'].user_id)] = resource
         elif (key, extras['nova_ctx'].user_id) not in self.cache and \
-                        resource.kind == os_addon.SEC_RULE:
+                resource.kind == os_addon.SEC_RULE:
             # don't need to cache twice, only adding links :-)
             self.cache[(key, extras['nova_ctx'].user_id)] = resource
 
@@ -136,7 +137,6 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
     # the following routines actually retrieve the info form OpenStack. Note
     # that a cache is used. The cache is stable - so delete resources
     # eventually also get deleted form the cache.
-
 
     def update_resource(self, item, result, res_ids, extras):
 
@@ -186,7 +186,6 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
             self.cache.pop((item.identifier, item.extras['user_id']))
 
         return result
-
 
     def get_resource(self, key, extras):
         """
@@ -321,7 +320,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
 
         for item in res_ids.get('network'):
             if (infrastructure.NETWORK.location + item,
-                context.user_id) in self.cache:
+                    context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
@@ -329,7 +328,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 result.extend(ent_list)
         for item in res_ids.get('sec_group'):
             if (os_addon.SEC_GROUP.location + item,
-                context.user_id) in self.cache:
+                    context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
@@ -337,7 +336,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 result.extend(ent_list)
         for item in res_ids.get('sec_rule'):
             if (os_addon.SEC_RULE.location + item,
-                context.user_id) in self.cache:
+                    context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
@@ -345,7 +344,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 result.extend(ent_list)
         for item in res_ids.get('compute'):
             if (infrastructure.COMPUTE.location + item,
-                context.user_id) in self.cache:
+                    context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
@@ -354,7 +353,7 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 result.extend(ent_list)
         for item in res_ids.get('storage'):
             if (infrastructure.STORAGE.location + item,
-                context.user_id) in self.cache:
+                    context.user_id) in self.cache:
                 continue
             else:
                 # construct (with links and mixins and add to cache!
@@ -364,7 +363,6 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         return result
 
     # Not part of parent
-
 
     def _update_occi_compute(self, entity, extras):
         """
@@ -625,7 +623,6 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
 
     @staticmethod
     def get_resource_ids(context, resource_names):
-
         """
 
         :rtype : dictionary of ids
@@ -656,7 +653,8 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                 [item.get('id') for item in sec_groups if item.get('id')]
         if 'sec_rule' in resource_names:
             sec_groups = security.retrieve_groups_by_project(context)
-            sec_rules = [rule.get('rules') for rule in sec_groups if rule.get('rules')][0]
+            sec_rules = [rule.get('rules')
+                         for rule in sec_groups if rule.get('rules')][0]
             resources['sec_rule'] = \
                 [rule.get('id') for rule in sec_rules if rule.get('id')]
 

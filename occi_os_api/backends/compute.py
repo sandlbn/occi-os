@@ -20,7 +20,7 @@
 The compute resource backend for OpenStack.
 """
 
-#pylint: disable=W0232,R0201
+# pylint: disable=W0232,R0201
 
 from occi.backend import KindBackend, ActionBackend
 from occi.extensions import infrastructure
@@ -31,6 +31,7 @@ from occi_os_api.nova_glue import vm
 
 
 class ComputeBackend(KindBackend, ActionBackend):
+
     """
     The compute backend.
     """
@@ -41,9 +42,9 @@ class ComputeBackend(KindBackend, ActionBackend):
         """
         # ignore some attributes - done via templating
         if 'occi.compute.cores' in entity.attributes or \
-                        'occi.compute.speed' in entity.attributes or \
-                        'occi.compute.memory' in entity.attributes or \
-                        'occi.compute.architecture' in entity.attributes:
+                'occi.compute.speed' in entity.attributes or \
+                'occi.compute.memory' in entity.attributes or \
+                'occi.compute.architecture' in entity.attributes:
             raise AttributeError('There are unsupported attributes in the '
                                  'request.')
 

@@ -20,7 +20,7 @@
 VM related 'glue' :-)
 """
 
-#pylint: disable=R0914,W0142,R0912,R0915
+# pylint: disable=R0914,W0142,R0912,R0915
 
 from nova import utils
 from nova.compute import task_states
@@ -345,7 +345,8 @@ def set_password_for_vm(uid, password, context):
     """
     instance = get_vm(uid, context)
     try:
-        get_openstack_api('compute').set_admin_password(context, instance, password)
+        get_openstack_api('compute').set_admin_password(
+            context, instance, password)
     except Exception as e:
         raise AttributeError(e.message)
 
@@ -360,7 +361,8 @@ def get_vnc(uid, context):
     console = None
     instance = get_vm(uid, context)
     try:
-        console = get_openstack_api('compute').get_vnc_console(context, instance, 'novnc')
+        console = get_openstack_api('compute').get_vnc_console(
+            context, instance, 'novnc')
     except Exception as e:
         LOG.warn('%s' % e.message)
     finally:
@@ -375,7 +377,8 @@ def get_vm(uid, context):
     context -- the os context
     """
     try:
-        instance = get_openstack_api('compute').get(context, uid, want_objects=True)
+        instance = get_openstack_api('compute').get(
+            context, uid, want_objects=True)
     except Exception:
         raise exceptions.HTTPError(404, 'VM not found!')
     return instance

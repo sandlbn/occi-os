@@ -66,6 +66,7 @@ MIXIN_BACKEND = backend.MixinBackend()
 
 
 class OCCIApplication(occi_wsgi.Application, wsgi.Application):
+
     """
     Adapter which 'translates' represents a nova WSGI application into and OCCI
     WSGI application.
@@ -202,7 +203,8 @@ class OCCIApplication(occi_wsgi.Application, wsgi.Application):
             try:
                 self.registry.get_backend(os_template, extras)
             except AttributeError:
-                msg = 'Registering an OS image type as: %s' % sanitize(os_template)
+                msg = 'Registering an OS image type as: %s' % sanitize(
+                    os_template)
                 LOG.debug(msg)
                 self.register_backend(os_template, MIXIN_BACKEND)
 

@@ -20,7 +20,7 @@
 Backends for the storage resource.
 """
 
-#pylint: disable=R0201,W0232,W0613
+# pylint: disable=R0201,W0232,W0613
 from datetime import date
 
 import uuid
@@ -35,6 +35,7 @@ from occi_os_api.utils import get_image_name
 
 
 class StorageBackend(backend.KindBackend, backend.ActionBackend):
+
     """
     Backend to handle storage resources.
     """
@@ -102,11 +103,11 @@ class StorageBackend(backend.KindBackend, backend.ActionBackend):
         if len(new.attributes) > 0:
             # support only title and summary changes now.
             if 'occi.core.title' in new.attributes and \
-                            len(new.attributes['occi.core.title']) > 0:
+                    len(new.attributes['occi.core.title']) > 0:
                 old.attributes['occi.core.title'] = \
                     new.attributes['occi.core.title']
             if 'occi.core.title' in new.attributes and \
-                            len(new.attributes['occi.core.summary']) > 0:
+                    len(new.attributes['occi.core.summary']) > 0:
                 old.attributes['occi.core.summary'] = \
                     new.attributes['occi.core.summary']
 
@@ -142,6 +143,7 @@ class StorageBackend(backend.KindBackend, backend.ActionBackend):
 
 
 class StorageLinkBackend(backend.KindBackend):
+
     """
     A backend for the storage links.
     """

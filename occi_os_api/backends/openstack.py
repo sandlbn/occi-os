@@ -20,7 +20,7 @@
 The compute resource backend for OpenStack.
 """
 
-#pylint: disable=W0232,R0201
+# pylint: disable=W0232,R0201
 import random
 from occi import backend
 from occi import exceptions
@@ -32,6 +32,7 @@ from occi_os_api.utils import sanitize
 
 
 class OsComputeBackend(backend.MixinBackend, backend.ActionBackend):
+
     """
     The OpenStackCompute backend.
     """
@@ -45,7 +46,7 @@ class OsComputeBackend(backend.MixinBackend, backend.ActionBackend):
 
         # set additional actions
         if 'occi.compute.state' in entity.attributes and entity.attributes[
-            'occi.compute.state'] == 'active':
+                'occi.compute.state'] == 'active':
             entity.actions.append(os_addon.OS_CREATE_IMAGE)
             entity.actions.append(os_addon.OS_CHG_PWD)
 
@@ -87,6 +88,7 @@ class OsComputeBackend(backend.MixinBackend, backend.ActionBackend):
 
 
 class OsNetLinkBackend(backend.MixinBackend, backend.ActionBackend):
+
     """
     The OpenStack network link backend.
     """
@@ -95,6 +97,7 @@ class OsNetLinkBackend(backend.MixinBackend, backend.ActionBackend):
 
 
 class SecurityGroupBackend(backend.UserDefinedMixinBackend):
+
     """
     Security Group backend.
     """
@@ -103,7 +106,7 @@ class SecurityGroupBackend(backend.UserDefinedMixinBackend):
         """
         Creates the security group as specified in the request.
         """
-        #do not recreate default openstack security groups
+        # do not recreate default openstack security groups
         if category.scheme == \
                 'http://schemas.openstack.org/infrastructure/security/group#':
             return
@@ -143,6 +146,7 @@ class SecurityGroupBackend(backend.UserDefinedMixinBackend):
 
 
 class SecurityRuleBackend(backend.KindBackend):
+
     """
     Security rule backend.
     """
@@ -167,7 +171,7 @@ class SecurityRuleBackend(backend.KindBackend):
         )
 
         if security_group_rule_exists(security_group, sg_rule):
-            #This rule already exists in group
+            # This rule already exists in group
             msg = 'This rule already exists in group. %s' % \
                   str(security_group)
             raise AttributeError(msg)

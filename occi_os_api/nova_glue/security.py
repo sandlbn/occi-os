@@ -34,7 +34,8 @@ def create_group(name, description, context):
     context -- The os context.
     """
     try:
-        get_openstack_api('security').create_security_group(context, name, description)
+        get_openstack_api('security').create_security_group(
+            context, name, description)
     except Exception as e:
         raise AttributeError(e.message)
 
