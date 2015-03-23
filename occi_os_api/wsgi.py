@@ -23,12 +23,17 @@ OCCI WSGI app
 # W0613:unused args,R0903:too few pub methods
 # pylint: disable=W0613,R0903
 
-from oslo.config import cfg
-
 from nova import wsgi
 from nova.openstack.common import log
-from occi_os_api.utils import occify_terms
+from urllib import quote
 
+from oslo.config import cfg
+from occi import backend
+from occi import core_model
+from occi import wsgi as occi_wsgi
+from occi.extensions import infrastructure
+
+from occi_os_api.utils import occify_terms
 from occi_os_api import registry
 from occi_os_api.backends import compute
 from occi_os_api.backends import openstack
@@ -39,13 +44,6 @@ from occi_os_api.extensions import os_addon
 from occi_os_api.nova_glue import vm
 from occi_os_api.nova_glue import security
 from occi_os_api.utils import sanitize, get_image_name
-
-from occi import backend
-from occi import core_model
-from occi import wsgi as occi_wsgi
-from occi.extensions import infrastructure
-
-from urllib import quote
 
 LOG = log.getLogger(__name__)
 
@@ -182,7 +180,8 @@ class OCCIApplication(occi_wsgi.Application, wsgi.Application):
         for img in images:
             # If the image is a kernel or ram one
             # and we're not to filter them out then register it.
-            if (img.get('container_format') or img.get('disk_format')) in ('ari', 'aki'):
+            if (img.get('container_format') or img.get('disk_format')) \
+                    in ('ari', 'aki'):
                 LOG.debug(
                     'Not registering kernel/RAM image %s' % sanitize(
                         img.get('name')

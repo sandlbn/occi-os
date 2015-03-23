@@ -66,7 +66,8 @@ def occify_terms(term_name):
 
 def sanitize(value):
     """
-    Removes empty spaces from api responses, returning empty string if response is None
+    Removes empty spaces from api responses,
+    returning empty string if response is None
     """
     if value:
         return str(value).strip().lower()
