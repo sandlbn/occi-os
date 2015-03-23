@@ -2,7 +2,7 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 #
-#    Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
+# Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -20,17 +20,18 @@
 The compute resource backend for OpenStack.
 """
 
-#pylint: disable=W0232,R0201
+# pylint: disable=W0232,R0201
+
+from occi.backend import KindBackend, ActionBackend
+from occi.extensions import infrastructure
 
 from occi_os_api.extensions import os_mixins
 from occi_os_api.extensions import os_addon
 from occi_os_api.nova_glue import vm
 
-from occi.backend import KindBackend, ActionBackend
-from occi.extensions import infrastructure
-
 
 class ComputeBackend(KindBackend, ActionBackend):
+
     """
     The compute backend.
     """
@@ -41,9 +42,9 @@ class ComputeBackend(KindBackend, ActionBackend):
         """
         # ignore some attributes - done via templating
         if 'occi.compute.cores' in entity.attributes or \
-           'occi.compute.speed' in entity.attributes or \
-           'occi.compute.memory' in entity.attributes or \
-           'occi.compute.architecture' in entity.attributes:
+                'occi.compute.speed' in entity.attributes or \
+                'occi.compute.memory' in entity.attributes or \
+                'occi.compute.architecture' in entity.attributes:
             raise AttributeError('There are unsupported attributes in the '
                                  'request.')
 
@@ -86,7 +87,8 @@ class ComputeBackend(KindBackend, ActionBackend):
 
         # set up to date attributes
         entity.attributes['occi.compute.hostname'] = instance['hostname']
-        # TODO: check to get arch from OS!
+        # it's tricky, probably will be available in kilo release,
+        # POF of this functionality is in the dev branch
         entity.attributes['occi.compute.architecture'] = 'x86'
         entity.attributes['occi.compute.cores'] = str(instance['vcpus'])
         entity.attributes['occi.compute.speed'] = str(0.0)  # N/A in instance

@@ -2,13 +2,13 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 #
-#    Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
+# Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#         http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 #    Unless required by applicable law or agreed to in writing, software
 #    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -20,7 +20,7 @@
 The compute resource backend for OpenStack.
 """
 
-#pylint: disable=W0232,R0201
+# pylint: disable=W0232,R0201
 import random
 from occi import backend
 from occi import exceptions
@@ -28,9 +28,11 @@ from occi import exceptions
 from occi_os_api.extensions import os_addon
 from occi_os_api.nova_glue import vm
 from occi_os_api.nova_glue import security
+from occi_os_api.utils import sanitize
 
 
 class OsComputeBackend(backend.MixinBackend, backend.ActionBackend):
+
     """
     The OpenStackCompute backend.
     """
@@ -51,7 +53,7 @@ class OsComputeBackend(backend.MixinBackend, backend.ActionBackend):
         # add VNC link if available
         console = vm.get_vnc(uid, context)
         if console:
-            entity.attributes['org.openstack.compute.console.vnc'] =\
+            entity.attributes['org.openstack.compute.console.vnc'] = \
                 console['url']
         else:
             entity.attributes['org.openstack.compute.console.vnc'] = 'N/A'
@@ -69,7 +71,7 @@ class OsComputeBackend(backend.MixinBackend, backend.ActionBackend):
 
         if action == os_addon.OS_CHG_PWD:
             if 'org.openstack.credentials.admin_pwd' not in attributes:
-                msg = 'org.openstack.credentials.admin_pwd was not supplied'\
+                msg = 'org.openstack.credentials.admin_pwd was not supplied' \
                       ' in the request.'
                 raise AttributeError(msg)
 
@@ -86,6 +88,7 @@ class OsComputeBackend(backend.MixinBackend, backend.ActionBackend):
 
 
 class OsNetLinkBackend(backend.MixinBackend, backend.ActionBackend):
+
     """
     The OpenStack network link backend.
     """
@@ -94,6 +97,7 @@ class OsNetLinkBackend(backend.MixinBackend, backend.ActionBackend):
 
 
 class SecurityGroupBackend(backend.UserDefinedMixinBackend):
+
     """
     Security Group backend.
     """
@@ -102,7 +106,7 @@ class SecurityGroupBackend(backend.UserDefinedMixinBackend):
         """
         Creates the security group as specified in the request.
         """
-        #do not recreate default openstack security groups
+        # do not recreate default openstack security groups
         if category.scheme == \
                 'http://schemas.openstack.org/infrastructure/security/group#':
             return
@@ -124,8 +128,25 @@ class SecurityGroupBackend(backend.UserDefinedMixinBackend):
                                                          extras['nova_ctx'])
         security.remove_group(security_group, context)
 
+    def retrieve(self, entity, extras):
+        """
+        Retrieve specified security group.
+        """
+        context = extras['nova_ctx']
+        iden = entity.attributes['occi.core.id']
+        security_group = security.retrieve_group(
+            iden,
+            context
+        )
+
+        entity.attributes = {
+            'occi.core.id': iden,
+            'occi.network.security.name': security_group["name"],
+        }
+
 
 class SecurityRuleBackend(backend.KindBackend):
+
     """
     Security rule backend.
     """
@@ -138,18 +159,29 @@ class SecurityRuleBackend(backend.KindBackend):
         """
         sec_mixin = get_sec_mixin(entity)
         context = extras['nova_ctx']
-        security_group = security.retrieve_group_by_name(sec_mixin.term,
-                                                         context)
-        sg_rule = make_sec_rule(entity, security_group['id'])
+
+        security_group = security.retrieve_group_by_name(
+            sec_mixin.term,
+            context
+        )
+
+        sg_rule = make_sec_rule(
+            entity,
+            security_group['id']
+        )
 
         if security_group_rule_exists(security_group, sg_rule):
-            #This rule already exists in group
-            msg = 'This rule already exists in group. %s' %\
+            # This rule already exists in group
+            msg = 'This rule already exists in group. %s' % \
                   str(security_group)
             raise AttributeError(msg)
 
-        rule = security.create_rule(sec_mixin.term, security_group['id'],
-                                    [sg_rule], context)
+        rule = security.create_rule(
+            sec_mixin.term,
+            security_group['id'],
+            [sg_rule],
+            context
+        )
         entity.attributes['occi.core.id'] = str(rule['id'])
 
     def delete(self, entity, extras):
@@ -164,6 +196,32 @@ class SecurityRuleBackend(backend.KindBackend):
             security.remove_rule(rule, context)
         except Exception as error:
             raise exceptions.HTTPError(500, str(error))
+
+    def retrieve(self, entity, extras):
+        """
+        Retrieve specified rule
+        """
+        context = extras['nova_ctx']
+        iden = entity.attributes['occi.core.id']
+        rule = security.retrieve_rule(
+            iden,
+            context
+        )
+
+        entity.attributes = {
+            'occi.network.security.protocol': sanitize(
+                rule.get('protocol', '')
+            ),
+            'occi.network.security.to': sanitize(
+                rule.get('port_range_max', '')
+            ),
+            'occi.network.security.from': sanitize(
+                rule.get('port_range_min', '')
+            ),
+            'occi.network.security.range': sanitize(
+                rule.get('remote_ip_prefix', '')
+            ),
+        }
 
 
 def make_sec_rule(entity, sec_grp_id):

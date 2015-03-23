@@ -2,10 +2,10 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 #
-#    Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
+# Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
 #
 #         http://www.apache.org/licenses/LICENSE-2.0
@@ -20,11 +20,9 @@
 Storage related glue :-)
 """
 
-from nova import compute
-
 from occi import exceptions
 
-VOLUME_API = compute.API().volume_api
+from occi_os_api.utils import get_openstack_api
 
 
 def create_storage(size, name, context):
@@ -46,10 +44,10 @@ def create_storage(size, name, context):
     size = int(float(size))
 
     try:
-        return VOLUME_API.create(context,
-                                 size,
-                                 name,
-                                 name)
+        return get_openstack_api('volume').create(context,
+                                                  size,
+                                                  name,
+                                                  name)
     except Exception as e:
         raise AttributeError(e.message)
 
@@ -62,7 +60,7 @@ def delete_storage_instance(uid, context):
     context -- The os context.
     """
     try:
-        VOLUME_API.delete(context, uid)
+        get_openstack_api('volume').delete(context, uid)
     except Exception as e:
         raise AttributeError(e.message)
 
@@ -76,7 +74,12 @@ def snapshot_storage_instance(uid, name, description, context):
     """
     try:
         instance = get_storage(uid, context)
-        VOLUME_API.create_snapshot(context, instance, name, description)
+        get_openstack_api('volume').create_snapshot(
+            context,
+            instance,
+            name,
+            description
+        )
     except Exception as e:
         raise AttributeError(e.message)
 
@@ -89,7 +92,10 @@ def get_storage(uid, context):
     context -- the os context
     """
     try:
-        instance = VOLUME_API.get(context, uid)
+        instance = get_openstack_api('volume').get(
+            context,
+            uid
+        )
     except Exception:
         raise exceptions.HTTPError(404, 'Volume not found!')
     return instance
@@ -99,4 +105,4 @@ def get_storage_volumes(context):
     """
     Retrieve all storage entities from user.
     """
-    return VOLUME_API.get_all(context)
+    return get_openstack_api('volume').get_all(context)

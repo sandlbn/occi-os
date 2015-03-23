@@ -21,7 +21,6 @@ Will test the OS occiosapi against a local running instance.
 #pylint: disable=W0102,C0103,R0904
 
 import base64
-import json
 import sys
 import time
 import httplib
@@ -84,23 +83,25 @@ def do_request(verb, url, headers):
         sys.exit(1)
 
 
-def get_os_token(username, password):
+def get_os_token(username, password, tenant="demo"):
     """
     Get a security token from Keystone.
     """
-    # TODO: switch dot demo account
-    body = '{"auth": {"tenantName": "' + 'demo' + '", ' \
-           '"passwordCredentials":{"username": "' + username + '", ' \
-           '"password": "' + password + '"}}}'
+    body = '{{"auth":{{"identity":{{"methods":["password"],' \
+           '"password":{{"user":{{"name":"{0}","domain":{{"id":"default"}}' \
+           ',"password":"{1}"}}}}}},"scope":{{"project":{{"name":"{2}",' \
+           '"domain":{{"id":"default"}}}}}}}}}}'.format(
+               username,
+               password,
+               tenant
+           )
 
     heads = {'Content-Type': 'application/json'}
     conn = httplib.HTTPConnection(KEYSTONE_HOST)
-    conn.request("POST", "/v2.0/tokens", body, heads)
+    conn.request("POST", "/v3/auth/tokens", body, heads)
     response = conn.getresponse()
-    data = response.read()
-    tokens = json.loads(data)
-    token = tokens['access']['token']['id']
-    return token
+    header = response.getheader('X-Subject-Token')
+    return header
 
 
 def get_qi_listing(token):

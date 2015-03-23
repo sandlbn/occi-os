@@ -17,17 +17,23 @@
 #    under the License.
 
 """
-OCCI WSGI app :-)
+OCCI WSGI app
 """
 
 # W0613:unused args,R0903:too few pub methods
 # pylint: disable=W0613,R0903
 
-from oslo.config import cfg
-
 from nova import wsgi
 from nova.openstack.common import log
+from urllib import quote
 
+from oslo.config import cfg
+from occi import backend
+from occi import core_model
+from occi import wsgi as occi_wsgi
+from occi.extensions import infrastructure
+
+from occi_os_api.utils import occify_terms
 from occi_os_api import registry
 from occi_os_api.backends import compute
 from occi_os_api.backends import openstack
@@ -37,17 +43,11 @@ from occi_os_api.extensions import os_mixins
 from occi_os_api.extensions import os_addon
 from occi_os_api.nova_glue import vm
 from occi_os_api.nova_glue import security
-
-from occi import backend
-from occi import core_model
-from occi import wsgi as occi_wsgi
-from occi.extensions import infrastructure
-
-from urllib import quote
+from occi_os_api.utils import sanitize, get_image_name
 
 LOG = log.getLogger(__name__)
 
-#Setup options
+# Setup options
 OCCI_OPTS = [
     cfg.IntOpt("occiapi_listen_port",
                default=8787,
@@ -64,6 +64,7 @@ MIXIN_BACKEND = backend.MixinBackend()
 
 
 class OCCIApplication(occi_wsgi.Application, wsgi.Application):
+
     """
     Adapter which 'translates' represents a nova WSGI application into and OCCI
     WSGI application.
@@ -105,8 +106,6 @@ class OCCIApplication(occi_wsgi.Application, wsgi.Application):
         # will use one backend for the networking links!
         self.register_backend(infrastructure.NETWORKINTERFACE,
                               networkinterface_backend)
-        #self.register_backend(infrastructure.IPNETWORKINTERFACE,
-        #                      networkinterface_backend)
 
         self.register_backend(infrastructure.STORAGE, storage_backend)
         self.register_backend(infrastructure.ONLINE, storage_backend)
@@ -167,36 +166,44 @@ class OCCIApplication(occi_wsgi.Application, wsgi.Application):
         images = vm.retrieve_images(extras['nova_ctx'])
 
         # delete those which are delete through different API.
-        os_lst = [occify_terms(item['name']) for item in images]
+        os_lst = [occify_terms(get_image_name(image)) for image in images]
         occi_lst = [item.term for item in self.registry.get_categories(
             extras) if item.scheme == template_schema]
         for item in list(set(occi_lst) - set(os_lst)):
-            self.registry.delete_mixin(os_mixins.OsTemplate(template_schema,
-                                                            item),
-                                       extras)
+            self.registry.delete_mixin(
+                os_mixins.OsTemplate(
+                    template_schema,
+                    item
+                ),
+                extras)
 
         for img in images:
             # If the image is a kernel or ram one
             # and we're not to filter them out then register it.
-            if (((img['container_format'] or img['disk_format']) in ('ari',
-                                                                     'aki'))):
-                msg = 'Not registering kernel/RAM image.'
-                LOG.debug(msg)
+            if (img.get('container_format') or img.get('disk_format')) \
+                    in ('ari', 'aki'):
+                LOG.debug(
+                    'Not registering kernel/RAM image %s' % sanitize(
+                        img.get('name')
+                    )
+                )
                 continue
-            ctg_term = occify_terms(img['id'])
-            os_template = os_mixins.OsTemplate(term=ctg_term,
-                                               scheme=template_schema,
-                                               os_id=img['id'],
-                                               related=[infrastructure.
-                                                        OS_TEMPLATE],
-                                               attributes=None,
-                                               title='Image: %s' % img['name'],
-                                               location='/' + ctg_term + '/')
+            ctg_term = occify_terms(img.get('id'))
+            os_template = os_mixins.OsTemplate(
+                term=ctg_term,
+                scheme=template_schema,
+                os_id=img.get('id'),
+                related=[infrastructure.OS_TEMPLATE],
+                attributes=None,
+                title='Image: %s' % get_image_name(img),
+                location='/' + ctg_term + '/'
+            )
 
             try:
                 self.registry.get_backend(os_template, extras)
             except AttributeError:
-                msg = 'Registering an OS image type as: %s' % str(os_template)
+                msg = 'Registering an OS image type as: %s' % sanitize(
+                    os_template)
                 LOG.debug(msg)
                 self.register_backend(os_template, MIXIN_BACKEND)
 
@@ -208,9 +215,10 @@ class OCCIApplication(occi_wsgi.Application, wsgi.Application):
         os_flavours = vm.retrieve_flavors()
 
         # delete those which are delete through different API.
-        os_lst = [occify_terms(str(item)) for item in os_flavours.keys()]
+        os_lst = [occify_terms(item) for item in os_flavours.keys()]
         occi_lst = [item.term for item in self.registry.get_categories(
             extras) if item.scheme == template_schema]
+
         for item in list(set(occi_lst) - set(os_lst)):
             self.registry.delete_mixin(os_mixins.ResourceTemplate(
                 template_schema, item), extras)
@@ -257,17 +265,9 @@ class OCCIApplication(occi_wsgi.Application, wsgi.Application):
                     scheme=sec_grp,
                     related=[os_addon.SEC_GROUP],
                     attributes=None,
-                    title="Security group: %s" % group['name'],
+                    title="Security group: %s" % group.get('name'),
                     location='/security/' + ctg_term + '/')
                 try:
                     self.registry.get_backend(sec_mix, extras)
                 except AttributeError:
                     self.register_backend(sec_mix, MIXIN_BACKEND)
-
-
-def occify_terms(term_name):
-    '''
-    Occifies a term_name so that it is compliant with GFD 185.
-    '''
-    term = term_name.strip().replace(' ', '_').replace('.', '-').lower()
-    return term

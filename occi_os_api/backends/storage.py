@@ -2,9 +2,9 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 #
-#    Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
+# Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
 #
@@ -20,7 +20,7 @@
 Backends for the storage resource.
 """
 
-#pylint: disable=R0201,W0232,W0613
+# pylint: disable=R0201,W0232,W0613
 from datetime import date
 
 import uuid
@@ -31,9 +31,11 @@ from occi.extensions import infrastructure
 
 from occi_os_api.nova_glue import storage
 from occi_os_api.nova_glue import vm
+from occi_os_api.utils import get_image_name
 
 
 class StorageBackend(backend.KindBackend, backend.ActionBackend):
+
     """
     Backend to handle storage resources.
     """
@@ -47,7 +49,6 @@ class StorageBackend(backend.KindBackend, backend.ActionBackend):
             raise AttributeError('size attribute not found!')
         size = entity.attributes['occi.storage.size']
 
-        name = ''
         if 'occi.core.title' not in entity.attributes:
             name = str(uuid.uuid4())
         else:
@@ -61,7 +62,7 @@ class StorageBackend(backend.KindBackend, backend.ActionBackend):
 
         if new_volume['status'] == 'error':
             raise exceptions.HTTPError(500, 'There was an error creating the '
-                                       'volume')
+                                            'volume')
         entity.attributes['occi.core.id'] = str(vol_id)
         entity.identifier = infrastructure.STORAGE.location + vol_id
 
@@ -80,8 +81,8 @@ class StorageBackend(backend.KindBackend, backend.ActionBackend):
 
         volume = storage.get_storage(v_id, extras['nova_ctx'])
 
-        entity.attributes['occi.core.title'] = str(volume['display_name'])
-        entity.attributes['occi.storage.size'] = str(float(volume['size']))
+        entity.attributes['occi.core.title'] = str(get_image_name(volume))
+        entity.attributes['occi.storage.size'] = str(float(volume.get('size')))
 
         # OS volume states:
         #       available, creating, deleting, in-use, error, error_deleting
@@ -106,7 +107,7 @@ class StorageBackend(backend.KindBackend, backend.ActionBackend):
                 old.attributes['occi.core.title'] = \
                     new.attributes['occi.core.title']
             if 'occi.core.title' in new.attributes and \
-               len(new.attributes['occi.core.summary']) > 0:
+                    len(new.attributes['occi.core.summary']) > 0:
                 old.attributes['occi.core.summary'] = \
                     new.attributes['occi.core.summary']
 
@@ -142,6 +143,7 @@ class StorageBackend(backend.KindBackend, backend.ActionBackend):
 
 
 class StorageLinkBackend(backend.KindBackend):
+
     """
     A backend for the storage links.
     """

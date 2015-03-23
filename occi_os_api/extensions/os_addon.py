@@ -2,7 +2,7 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 #
-#    Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
+# Copyright (c) 2012, Intel Performance Learning Solutions Ltd.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -20,7 +20,7 @@
 Set of extensions to get OCCI work with OpenStack.
 """
 
-#pylint: disable=W0232,R0912,R0201,R0903
+# pylint: disable=W0232,R0912,R0201,R0903
 
 from occi import core_model
 
@@ -31,6 +31,11 @@ _SEC_RULE_ATTRIBUTES = {
     'occi.network.security.from': '',
     'occi.network.security.range': '',
 }
+
+_SEC_GROUP_ATTRIBUTES = {
+    'occi.network.security.name': '',
+}
+
 SEC_RULE = core_model.Kind(
     'http://schemas.openstack.org/occi/infrastructure/network/security#',
     'rule',
@@ -43,7 +48,9 @@ SEC_RULE = core_model.Kind(
 # Network security rule group
 SEC_GROUP = core_model.Mixin(
     'http://schemas.ogf.org/occi/infrastructure/security#',
-    'group', attributes=None)
+    'group',
+    attributes=_SEC_GROUP_ATTRIBUTES
+)
 
 # OS change adminstrative password action
 _OS_CHG_PWD_ATTRIBUTES = {'org.openstack.credentials.admin_pwd': '', }
