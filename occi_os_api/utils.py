@@ -118,7 +118,7 @@ def is_networkinterface(resource):
     :param resource:
     :return: bool
     """
-    if resource == infrastructure.IPNETWORKINTERFACE:
+    if resource == infrastructure.NETWORKINTERFACE:
         return True
     return False
 
