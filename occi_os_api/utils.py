@@ -90,36 +90,70 @@ def get_image_name(image):
 
 
 def is_compute(resource):
+    """
+    Return True if object is a compute resource
+    :param resource:
+    :return: bool
+    """
     if resource == infrastructure.COMPUTE:
         return True
     return False
 
 
 def is_network(resource):
+    """
+    Return True if object is a network resource
+    :param resource:
+    :return: bool
+    """
     if resource == infrastructure.NETWORK:
         return True
     return False
 
 
 def is_networkinterface(resource):
+    """
+    Return True if object is a network
+    interface resource
+    :param resource:
+    :return: bool
+    """
     if resource == infrastructure.IPNETWORKINTERFACE:
         return True
     return False
 
 
 def is_sec_group(resource):
+    """
+    Return True if object is a security
+    group resource
+    :param resource:
+    :return: bool
+    """
     if resource == os_addon.SEC_GROUP:
         return True
     return False
 
 
 def is_sec_rule(resource):
+    """
+    Return True if object is a security
+    rule resource
+    :param resource:
+    :return: bool
+    """
     if resource == os_addon.SEC_RULE:
         return True
     return False
 
 
 def is_storage(resource):
+    """
+    Return True if object is a storage
+    resource
+    :param resource:
+    :return: bool
+    """
     if resource == infrastructure.STORAGE:
         return True
     return False

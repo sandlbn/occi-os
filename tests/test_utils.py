@@ -25,9 +25,12 @@ Test utils module.
 import unittest
 import mock
 import nova
-from occi_os_api.utils import get_openstack_api, get_neutron_url, \
-    occify_terms
+
 from oslo.config import cfg
+from occi.extensions import infrastructure
+
+from occi_os_api import utils
+from occi_os_api.extensions import os_addon
 
 
 class TestUtils(unittest.TestCase):
@@ -42,30 +45,30 @@ class TestUtils(unittest.TestCase):
         nova.rpc.get_client = mock.MagicMock(return_value=True)
         nova.rpc.get_notifier = mock.MagicMock(return_value=True)
 
-        neutron = get_openstack_api('neutron')
+        neutron = utils.get_openstack_api('neutron')
         self.assertEqual(
             type(neutron),
             type(nova.compute.API().network_api)
         )
-        compute = get_openstack_api('compute')
+        compute = utils.get_openstack_api('compute')
         self.assertEqual(
             type(compute),
             type(nova.compute.API())
         )
 
-        security = get_openstack_api('security')
+        security = utils.get_openstack_api('security')
         self.assertEqual(
             type(security),
             type(nova.compute.API().security_group_api)
         )
 
-        image = get_openstack_api('image')
+        image = utils.get_openstack_api('image')
         self.assertEqual(
             type(image),
             type(nova.image.glance.get_default_image_service())
         )
 
-        volume = get_openstack_api('volume')
+        volume = utils.get_openstack_api('volume')
         self.assertEqual(
             type(volume),
             type(nova.compute.API().volume_api)
@@ -80,10 +83,10 @@ class TestUtils(unittest.TestCase):
         nova.rpc.get_notifier = mock.MagicMock(return_value=True)
 
         with self.assertRaises(ValueError):
-            get_openstack_api('non_ex_api')
+            utils.get_openstack_api('non_ex_api')
 
         with self.assertRaises(TypeError):
-            get_openstack_api()
+            utils.get_openstack_api()
 
     def test_p_get_neutron_url(self):
         """
@@ -98,7 +101,7 @@ class TestUtils(unittest.TestCase):
         CONF.register_group(opt_group)
         CONF.register_opts(neutron_opts, opt_group)
 
-        neutron_url = get_neutron_url()
+        neutron_url = utils.get_neutron_url()
         self.assertEqual(neutron_url, "localhost:999")
 
     def test_p_occify_terms(self):
@@ -107,13 +110,46 @@ class TestUtils(unittest.TestCase):
         """
 
         string1 = " _AeRRV-_ "
-        occi_term = occify_terms(string1)
+        occi_term = utils.occify_terms(string1)
         self.assertEqual(occi_term, "_aerrv-_")
 
         string2 = " b7ffb49e2369913df0c6b7aeb72cbc0b1e42c947 "
-        occi_term = occify_terms(string2)
+        occi_term = utils.occify_terms(string2)
         self.assertEqual(occi_term, "b7ffb49e2369913df0c6b7aeb72cbc0b1e42c947")
 
         string3 = None
-        occi_term = occify_terms(string3)
+        occi_term = utils.occify_terms(string3)
         self.assertEqual(occi_term, None)
+
+
+    def test_resources(self):
+        """
+        Test resource types
+        """
+
+        compute = infrastructure.COMPUTE
+        network = infrastructure.NETWORKINTERFACE
+        network_interface = infrastructure.NETWORKINTERFACE
+        storage = infrastructure.STORAGE
+        security_group = os_addon.SEC_GROUP
+        security_rule = os_addon.SEC_RULE
+
+        self.assertFalse(utils.is_networkinterface(compute))
+
+        self.assertFalse(utils.is_network(compute))
+
+        self.assertFalse(utils.is_sec_group(compute))
+
+        self.assertFalse(utils.is_sec_rule(network))
+
+        self.assertFalse(utils.is_storage(network_interface))
+
+        self.assertTrue(utils.is_networkinterface(network_interface))
+
+        self.assertTrue(utils.is_network(network))
+
+        self.assertTrue(utils.is_sec_group(security_group))
+
+        self.assertTrue(utils.is_sec_rule(security_rule))
+
+        self.assertTrue(utils.is_storage(storage))
