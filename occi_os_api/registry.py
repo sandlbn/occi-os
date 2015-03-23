@@ -198,16 +198,15 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
         )
         res_ids = OCCIRegistry.get_resource_ids(
             context,
-            [
-                'network', 'network_port', 'storage', 'sec_rule', 'sec_group', 'compute'
-            ]
-        )
+            ['network', 'network_port', 'storage', 'sec_rule', 'sec_group',
+             'compute'])
 
         if (key, context.user_id) in self.cache:
             # I have seen it - need to update or delete if gone in OS!
             # I have already seen it
             cached_item = self.cache[(key, context.user_id)]
-            if iden not in res_ids.get('network') and is_network(cached_item.kind):
+            if iden not in res_ids.get('network') and is_network(
+                    cached_item.kind):
                 # it was delete in OS -> remove from cache + KeyError!
                 # can delete it because it was my item!
                 self.cache.pop((key, repr(extras)))
@@ -216,24 +215,28 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
                     and is_networkinterface(cached_item.kind):
                 self.cache.pop((key, repr(extras)))
                 raise KeyError
-            if iden not in res_ids.get('compute') and is_compute(cached_item.kind):
+            if iden not in res_ids.get('compute') and is_compute(
+                    cached_item.kind):
                 # it was delete in OS -> remove links, cache + KeyError!
                 # can delete it because it was my item!
                 for link in cached_item.links:
                     self.cache.pop((link.identifier, repr(extras)))
                 self.cache.pop((key, repr(extras)))
                 raise KeyError
-            if iden not in res_ids.get('storage') and is_storage(cached_item.kind):
+            if iden not in res_ids.get('storage') and is_storage(
+                    cached_item.kind):
                 # it was delete in OS -> remove from cache + KeyError!
                 # can delete it because it was my item!
                 self.cache.pop((key, repr(extras)))
                 raise KeyError
-            if iden not in res_ids.get('sec_group') and is_sec_group(cached_item.kind):
+            if iden not in res_ids.get('sec_group') and is_sec_group(
+                    cached_item.kind):
                 # it was delete in OS -> remove from cache + KeyError!
                 # can delete it because it was my item!
                 self.cache.pop((key, repr(extras)))
                 raise KeyError
-            if iden not in res_ids.get('sec_rule') and is_sec_rule(cached_item.kind):
+            if iden not in res_ids.get('sec_rule') and is_sec_rule(
+                    cached_item.kind):
                 # it was delete in OS -> remove from cache + KeyError!
                 # can delete it because it was my item!
                 self.cache.pop((key, repr(extras)))
@@ -306,10 +309,8 @@ class OCCIRegistry(occi_registry.NonePersistentRegistry):
 
         res_ids = OCCIRegistry.get_resource_ids(
             context,
-            [
-                'network', 'network_port', 'storage', 'sec_rule', 'sec_group', 'compute'
-            ]
-        )
+            ['network', 'network_port', 'storage', 'sec_rule', 'sec_group',
+             'compute'])
 
         for item in self.cache.values():
             if item.extras is not None and item.extras['user_id'] != \

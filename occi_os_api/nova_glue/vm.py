@@ -87,8 +87,8 @@ def create_vm(entity, context):
         # Look for security group. If the group is non-existant, the
         # call to create will fail.
         elif os_addon.SEC_GROUP in mixin.related:
-            secgroup = get_openstack_api('compute').security_group_api.get(context,
-                                                                           name=mixin.term)
+            secgroup = get_openstack_api('compute').security_group_api.get(
+                context, name=mixin.term)
             sg_names.append(secgroup["name"])
 
     for link in entity.links:
@@ -152,8 +152,8 @@ def rebuild_vm(uid, image_href, context):
     admin_password = utils.generate_password()
     kwargs = {}
     try:
-        get_openstack_api('compute').rebuild(context, instance, image_href, admin_password,
-                                             **kwargs)
+        get_openstack_api('compute').rebuild(
+            context, instance, image_href, admin_password, **kwargs)
     except Exception as e:
         raise AttributeError(e.message)
 
@@ -173,8 +173,9 @@ def resize_vm(uid, flavor_id, context):
     kwargs = {}
     try:
         flavor = flavors.get_flavor_by_flavor_id(flavor_id)
-        get_openstack_api('compute').resize(context, instance, flavor_id=flavor['flavorid'],
-                                            **kwargs)
+        get_openstack_api('compute').resize(
+            context, instance, flavor_id=flavor['flavorid'],
+            **kwargs)
         ready = False
         i = 0
         # XXX are 15 secs enough to resize?

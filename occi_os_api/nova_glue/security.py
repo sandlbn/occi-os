@@ -90,7 +90,8 @@ def retrieve_groups_by_project(context):
     context -- The os context.
     """
     try:
-        return get_openstack_api('security').list(context, project=context.project_id)
+        return get_openstack_api('security').list(
+            context, project=context.project_id)
     except ConnectionFailed as e:
         return AttributeError("Can't connect to the neutron API server %s" % e)
 
