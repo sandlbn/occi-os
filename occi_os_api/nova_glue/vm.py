@@ -27,9 +27,10 @@ from nova.compute import task_states
 from nova.compute import vm_states
 from nova.compute import flavors
 from nova.openstack.common import log
-
+from novaclient import client
 from occi import exceptions
 from occi.extensions import infrastructure
+from occi_os_api.utils import get_nova_url
 
 from occi_os_api.extensions import os_mixins
 from occi_os_api.extensions import os_addon
@@ -38,6 +39,9 @@ from occi_os_api.utils import get_openstack_api, is_networkinterface
 
 LOG = log.getLogger(__name__)
 
+def get_nova_connection(context):
+    token = context.auth_token
+    return client.Client('2.0', endpoint_url=get_nova_url(), token=token)
 
 def create_vm(entity, context):
     """
@@ -54,20 +58,8 @@ def create_vm(entity, context):
         name = None
     key_name = key_data = None
     password = utils.generate_password()
-    access_ip_v4 = None
-    access_ip_v6 = None
-    user_data = None
-    metadata = {}
-    injected_files = []
-    min_count = max_count = 1
     requested_networks = None
     sg_names = []
-    availability_zone = None
-    config_drive = None
-    block_device_mapping = None
-    kernel_id = ramdisk_id = None
-    auto_disk_config = None
-    scheduler_hints = None
 
     resource_template = None
     os_template = None
@@ -96,7 +88,7 @@ def create_vm(entity, context):
             net_id = link.target.attributes['occi.core.id']
             if requested_networks is None:
                 requested_networks = []
-            requested_networks.append((net_id, None, None))
+            requested_networks.append({'net_id': net_id})
 
     if not os_template:
         raise AttributeError('Please provide a valid OS Template.')
@@ -107,31 +99,20 @@ def create_vm(entity, context):
         inst_type = None
     # make the call
     try:
-        (instances, _reservation_id) = get_openstack_api('compute').create(
-            context=context,
-            instance_type=inst_type,
-            image_href=os_template.os_id,
-            kernel_id=kernel_id,
-            ramdisk_id=ramdisk_id,
-            min_count=min_count,
-            max_count=max_count,
-            display_name=name,
-            display_description=name,
+
+        nova = get_nova_connection(context).servers.create(
+            name=name,
+            image=os_template.os_id,
+            flavor=resource_template.res_id,
+            security_groups=sg_names,
             key_name=key_name,
-            key_data=key_data,
-            security_group=sg_names,
-            availability_zone=availability_zone,
-            user_data=user_data,
-            metadata=metadata,
-            injected_files=injected_files,
-            admin_password=password,
-            block_device_mapping=block_device_mapping,
-            access_ip_v4=access_ip_v4,
-            access_ip_v6=access_ip_v6,
-            requested_networks=requested_networks,
-            config_drive=config_drive,
-            auto_disk_config=auto_disk_config,
-            scheduler_hints=scheduler_hints)
+            nics=requested_networks,
+            availability_zone='nova'
+        )
+        instances = get_nova_connection(
+            context
+        ).servers.findall(name=name)[0]
+
     except Exception as e:
         raise AttributeError(e.message)
 

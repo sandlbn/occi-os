@@ -47,12 +47,17 @@ def get_openstack_api(api):
         raise ValueError('{0} API not found'.format(str(api)))
 
 
+def get_nova_url():
+    """
+    returns nova url based on oslo config
+    """
+    return CONF.nova.url
+
 def get_neutron_url():
     """
     returns neutron url based on oslo config
     """
     return CONF.neutron.url
-
 
 def occify_terms(term_name):
     """
@@ -71,8 +76,11 @@ def sanitize(value):
     else:
         return ''
 
+
 def get_item_id(item):
     return item.identifier[item.identifier.rfind('/') + 1:]
+
+
 def get_image_name(image):
     """
     Return image name if Image name is not None
