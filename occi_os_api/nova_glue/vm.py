@@ -31,17 +31,33 @@ from novaclient import client
 from occi import exceptions
 from occi.extensions import infrastructure
 from occi_os_api.utils import get_nova_url
+from keystoneclient.auth.identity import v2
+from keystoneclient import session
 
 from occi_os_api.extensions import os_mixins
 from occi_os_api.extensions import os_addon
 from occi_os_api.utils import get_openstack_api, is_networkinterface
-
+from ConfigParser import ConfigParser
 
 LOG = log.getLogger(__name__)
 
-def get_nova_connection(context):
-    token = context.auth_token
-    return client.Client('2.0', endpoint_url=get_nova_url(), token=token)
+
+def get_nova_connection():
+    configuration = ConfigParser()
+    nova_conf = configuration.read('/etc/mcn_sla/openstack.conf')
+    username = nova_conf.get('openstack', 'username')
+    password = nova_conf.get('openstack', 'password')
+    tenant_name = nova_conf.get('openstack', 'tenant_name')
+    auth_url = nova_conf.get('openstack', 'auth_url')
+    auth = v2.Password(
+        auth_url=auth_url,
+        username=username,
+        password=password,
+        tenant_name=tenant_name
+    )
+    sess = session.Session(auth=auth)
+    return client.Client('2', session=sess)
+
 
 def create_vm(entity, context):
     """
@@ -50,7 +66,6 @@ def create_vm(entity, context):
     entity -- the OCCI resource entity.
     context -- the os context.
     """
-    # TODO: needs major overhaul!
 
     if 'occi.compute.hostname' in entity.attributes:
         name = entity.attributes['occi.compute.hostname']
@@ -88,7 +103,7 @@ def create_vm(entity, context):
             net_id = link.target.attributes['occi.core.id']
             if requested_networks is None:
                 requested_networks = []
-            requested_networks.append({'net_id': net_id})
+            requested_networks.append({'net-id': net_id})
 
     if not os_template:
         raise AttributeError('Please provide a valid OS Template.')
@@ -100,7 +115,7 @@ def create_vm(entity, context):
     # make the call
     try:
 
-        nova = get_nova_connection(context).servers.create(
+        vm = get_nova_connection(context).servers.create(
             name=name,
             image=os_template.os_id,
             flavor=resource_template.res_id,
@@ -109,9 +124,7 @@ def create_vm(entity, context):
             nics=requested_networks,
             availability_zone='nova'
         )
-        instances = get_nova_connection(
-            context
-        ).servers.findall(name=name)[0]
+        instances = get_vm(vm.id, context)
 
     except Exception as e:
         raise AttributeError(e.message)
